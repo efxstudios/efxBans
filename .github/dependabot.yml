@@ -6,6 +6,7 @@ updates:
       interval: weekly
     ignore:
       - dependency-name: "io.papermc.paper:paper-api"
+      - dependency-name: "com.destroystokyo.paper:paper-api"
     groups:
       test-libraries:
         patterns: ['org.junit*', 'org.mockito*']

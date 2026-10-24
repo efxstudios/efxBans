@@ -6,8 +6,9 @@ Security fixes go into the latest release only. If you run an older version, upd
 
 ## Reporting a vulnerability
 
-**Please don't open a public issue for security problems.** Use GitHub's private reporting form instead:
-**Security → Report a vulnerability** ([direct link](https://github.com/efxstudios/efxBans/security/advisories/new)).
+**Please don't open a public issue for security problems.** If GitHub's private reporting form is available, use **Security → Report a vulnerability** ([direct link](https://github.com/efxstudios/efxBans/security/advisories/new)).
+
+If that form is unavailable, contact the maintainers through [efxStudios on Discord](https://discord.gg/efxstudios) to arrange a private report. Do not post vulnerability details, webhook URLs, passwords or player data in public channels.
 
 Please include:
 

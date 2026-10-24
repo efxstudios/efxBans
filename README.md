@@ -1,8 +1,10 @@
 # efxBans
 
-Punishment management for Paper and Folia servers: bans, IP bans, mutes, kicks and warnings. Commands use one Brigadier tree with native Paper registration on modern servers and a Bukkit command adapter on older Paper builds. If the database can't be reached, players are refused at login instead of being let in unchecked.
+An **advanced**, **powerful**, and **customizable** punishment plugin for **Minecraft** servers.
 
-Messages ship in English, Turkish, German, Spanish and French, and every one of them can be edited.
+Manage bans, IP bans, mutes, kicks and warnings on Paper and Folia. Use SQLite for a single server or MySQL to share punishments across your network. The current version is **1.0.0**.
+
+Messages ship in English, Turkish, German, Spanish and French, and every one of them can be edited. Download from [Modrinth](https://modrinth.com/project/efxbans/) or get help on [Discord](https://discord.gg/efxstudios).
 
 <p>
   <a href="https://papermc.io"><img alt="Supported on Paper" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/supported/paper_vector.svg" height="40"></a>
@@ -226,6 +228,8 @@ If the database can't be opened, or the punishment cache can't be refreshed for 
 Project-page descriptions: [Modrinth / Markdown](.github/listings/modrinth.md) · [Spigot / BBCode](.github/listings/spigot.bbcode). Both include a banner placeholder and Devin's Badges.
 
 JDK 21+ is required. Maven is downloaded by the wrapper. Security reports: [security policy](.github/SECURITY.md).
+
+Commands use a shared Brigadier tree with native Paper registration on modern builds and a Bukkit command adapter on older Paper builds. No command library needs to be installed separately.
 
 ```bash
 ./mvnw clean verify
