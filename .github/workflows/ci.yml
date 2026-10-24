@@ -1,0 +1,108 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and test (Java ${{ matrix.java }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['21', '25']
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: maven
+      - run: ./mvnw -B -ntp verify
+      - uses: actions/upload-artifact@v7
+        if: matrix.java == '21'
+        with:
+          name: efxBans-jar
+          path: target/efxBans-*.jar
+          if-no-files-found: error
+          retention-days: 14
+
+  paper-api:
+    name: Test against Paper ${{ matrix.paper }} API
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - paper: 1.21.11-R0.1-SNAPSHOT
+            java: '21'
+            release: 21
+            adventure: 4.26.1
+          - paper: 26.3.build.214-stable
+            java: '25'
+            release: 25
+            adventure: 5.2.0
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: maven
+      - run: ./mvnw -B -ntp verify -Dpaper.version=${{ matrix.paper }} -Dmaven.compiler.release=${{ matrix.release }} -Dadventure.version=${{ matrix.adventure }}
+
+  legacy-api:
+    name: Compile shared code against Paper 1.16.5 (Java 16 bytecode)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - run: ./mvnw -B -ntp -Plegacy-api clean compile
+
+  mysql:
+    name: Tests on MySQL ${{ matrix.mysql }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        mysql: ['8.0', '8.4']
+    services:
+      mysql:
+        image: mysql:${{ matrix.mysql }}
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+          MYSQL_DATABASE: efxbans_test
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    env:
+      EFXBANS_MYSQL_HOST: 127.0.0.1
+      EFXBANS_MYSQL_PORT: '3306'
+      EFXBANS_MYSQL_DATABASE: efxbans_test
+      EFXBANS_MYSQL_USER: root
+      EFXBANS_MYSQL_PASSWORD: ''
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - run: ./mvnw -B -ntp test -Dtest='MySql*Test' -Dsurefire.failIfNoSpecifiedTests=false

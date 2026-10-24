@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: maven
+    directory: /
+    schedule:
+      interval: weekly
+    ignore:
+      - dependency-name: "io.papermc.paper:paper-api"
+      - dependency-name: "com.destroystokyo.paper:paper-api"
+    groups:
+      test-libraries:
+        patterns: ['org.junit*', 'org.mockito*']
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

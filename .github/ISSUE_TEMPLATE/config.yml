@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/efxstudios/efxBans/blob/main/.github/SECURITY.md
+    about: Follow the private reporting instructions instead of opening a public issue.
+  - name: Discord support
+    url: https://discord.gg/efxstudios
+    about: Get setup help and ask questions about efxBans.

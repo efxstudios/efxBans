@@ -1,0 +1,180 @@
+[CENTER][IMG]BANNER_URL[/IMG]
+
+[SIZE=7][B]efxBans[/B][/SIZE]
+[SIZE=4]An [B]advanced[/B], [B]powerful[/B], and [B]customizable[/B] punishment plugin for [B]Minecraft[/B] servers.[/SIZE]
+
+[URL=https://papermc.io/][IMG]https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/supported/paper_64h.png[/IMG][/URL]
+[URL=https://modrinth.com/project/efxbans/][IMG]https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/available/modrinth_64h.png[/IMG][/URL]
+[IMG]https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/built-with/java_64h.png[/IMG]
+[URL=https://discord.gg/efxstudios][IMG]https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/social/discord-plural_64h.png[/IMG][/URL]
+
+Give your staff one place to manage bans, IP bans, mutes, kicks and warnings.
+Start with SQLite, share punishments across servers with MySQL, and make the messages fit your community.
+
+[B]Version 1.0.0 • Paper 1.16.5–26.3 • Folia • SQLite & MySQL • Five languages[/B][/CENTER]
+
+[SIZE=5][B]Compatibility[/B][/SIZE]
+
+Use the same efxBans JAR across the supported Minecraft versions, with the Java version required by your server.
+
+[LIST]
+[*][B]Paper 1.16.5[/B] — Java 16
+[*][B]Paper 1.17–1.19.4[/B] — Java 17
+[*][B]Paper 1.20–1.21.11[/B] — Java 21+
+[*][B]Paper 26.1–26.3[/B] — Java 25+
+[/LIST]
+
+[B]Folia is supported[/B] on its available server versions. Use the Java version required by that Folia build.
+
+[B]Paper or Folia server software is required. Spigot and Bukkit server software are not supported.[/B]
+
+[SIZE=5][B]Moderation essentials[/B][/SIZE]
+
+[LIST]
+[*][B]Temporary and permanent punishments.[/B] Ban, IP ban or mute an account with a reason and duration. Kick online players or warn online and offline accounts.
+[*][B]History you can follow.[/B] Every punishment has its own ID. View an account's history, inspect active punishments, remove a restriction or undo a specific record.
+[*][B]Quick staff workflows.[/B] Player suggestions, banned-player suggestions for /unban, muted-player suggestions for /unmute, and clickable active lists.
+[*][B]Silent actions.[/B] Use -s for a ban, IP ban, mute or kick without a server announcement. Discord notifications still follow your settings.
+[/LIST]
+
+[CODE]/ban Player 7d Cheating
+/mute Player 30m Chat spam
+/kick -s Player Please read the rules
+/warn Player Keep the chat respectful
+/lookup Player[/CODE]
+
+Durations use [B]s, m, h, d and w[/B]. Combine them as needed: 1d12h, 2h30m or 7d. Omit the duration for a permanent ban or mute when your permissions allow it.
+
+[SIZE=5][B]Related accounts at a glance[/B][/SIZE]
+
+Use [B]/alts <player>[/B] to find accounts that previously shared an IP address.
+
+[LIST]
+[*][COLOR=#FF5656][B]Red:[/B][/COLOR] an active ban or IP ban. Click the name to inspect that ban with /lookup.
+[*][COLOR=#90EE90][B]Light green:[/B][/COLOR] online, with no active ban.
+[*][COLOR=#D3D3D3][B]Light gray:[/B][/COLOR] offline, with no active ban.
+[/LIST]
+
+Ban lookup links require [B]efxbans.lookup[/B]. Shared IP addresses are a moderation clue; they do not establish that two accounts belong to the same person.
+
+[SIZE=5][B]Make it yours[/B][/SIZE]
+
+[B]Five included languages[/B]
+English, Turkish, German, Spanish and French. Edit the language files, create your own translation, and customize messages and ban screens with MiniMessage.
+
+[B]Custom punishment commands[/B]
+Create presets for common situations. The included examples give you [B]/cheating Player[/B] for a 30-day IP ban, [B]/advertising Player[/B] for a 7-day mute, [B]/swearing Player[/B] for a 2-hour mute and [B]/spam Player[/B] for a warning. Change their commands, aliases, reasons, durations and permissions in config.yml.
+
+A preset needs its configured permission, the corresponding punishment permission, temporary or permanent access for timed punishments, and an allowed duration.
+
+[B]Permissions for your staff[/B]
+Control temporary, permanent, silent and IP-targeted actions separately. Set duration limits and account exemptions for your staff setup.
+
+[SIZE=5][B]Discord webhooks[/B][/SIZE]
+
+Send moderation events to a Discord channel with embeds that include:
+
+[LIST]
+[*][B]Automatic player heads:[/B] an avatar beside the player name and a larger head thumbnail for player targets. Address-only punishments omit player images.
+[*][B]Action titles and colors:[/B] localized labels distinguish bans, IP bans, mutes, kicks, warnings, removals and undo actions.
+[*][B]Useful context:[/B] player, staff member, punishment type, reason and the punishment ID.
+[*][B]Timed punishment details:[/B] duration and expiry, with Discord dates and relative timestamps for temporary punishments.
+[/LIST]
+
+Choose the events to send in [B]discord.actions[/B]. IP addresses are excluded by default and can be included with [B]discord.include-ip[/B]. Player heads appear automatically; no extra setting or plugin is required.
+
+[SIZE=5][B]One server or several[/B][/SIZE]
+
+[B]SQLite[/B] works out of the box for a single server. [B]MySQL[/B] lets multiple Paper or Folia servers share punishment records and active restrictions. Install efxBans on each server and connect them to the same database.
+
+If the database cannot be verified, new logins are refused and chat is blocked once the punishment cache becomes stale. Existing punishment records remain in the database.
+
+[SIZE=5][B]Switching from another ban plugin[/B][/SIZE]
+
+Import from [B]vanilla ban lists[/B], [B]AdvancedBan[/B] or [B]LiteBans[/B]:
+
+[CODE]/efxbans import vanilla
+/efxbans import advancedban
+/efxbans import litebans[/CODE]
+
+The command previews the source first. Add [B]confirm[/B] to import it. Existing imports are skipped when you run it again, and imported records keep their reasons, staff names, dates and active or lifted state.
+
+LiteBans requires MySQL or MariaDB storage. AdvancedBan supports MySQL and its default local storage; keep AdvancedBan enabled when importing from its local database.
+
+[SIZE=5][B]Getting started[/B][/SIZE]
+
+[LIST=1]
+[*]Choose a supported [B]Paper[/B] or [B]Folia[/B] build and the Java version listed above.
+[*]Download [B]efxBans 1.0.0[/B] from [URL=https://modrinth.com/project/efxbans/]Modrinth[/URL].
+[*]Put [B]efxBans-1.0.0.jar[/B] in your server's plugins folder and restart.
+[*]Choose your language in plugins/efxBans/config.yml and assign staff permissions.
+[/LIST]
+
+SQLite is enabled by default. No other plugin is required.
+
+Run [B]/efxbans reload[/B] after editing messages and most settings. Changes to the database, command names or aliases require a restart. Outdated configuration files are backed up before migration.
+
+[SIZE=5][B]Updates[/B][/SIZE]
+
+The optional update checker uses [URL=https://modrinth.com/project/efxbans/]Modrinth[/URL] and only suggests published stable releases compatible with your Minecraft version and Paper or Folia loader. Staff with [B]efxbans.update.notify[/B] receive a clickable download notice when they join. Disable checks with [B]update-checker.enabled: false[/B].
+
+[SIZE=5][B]Command reference[/B][/SIZE]
+
+[LIST]
+[*][B]/ban, /ipban, /mute[/B] — Temporary or permanent restrictions
+[*][B]/kick, /warn[/B] — Kicks and warnings
+[*][B]/unban, /unmute[/B] — Remove active restrictions
+[*][B]/undo <#ID>[/B] — Revoke one punishment record
+[*][B]/lookup <player|IP|#ID>[/B] — Inspect active bans, IP bans and mutes
+[*][B]/history <player> [page][/B] — View punishment history
+[*][B]/punishment <#ID>[/B] — Inspect a record and its audit history
+[*][B]/banlist, /mutelist[/B] — Browse active restrictions
+[*][B]/alts <player>[/B] — Find accounts that shared an IP
+[*][B]/efxbans help[/B] — Show available commands
+[*][B]/efxbans status[/B] — Show version and database status
+[*][B]/efxbans reload[/B] — Reload messages and settings
+[*][B]/efxbans import <source> [confirm][/B] — Preview or import another plugin's records
+[/LIST]
+
+[SIZE=5][B]Permissions[/B][/SIZE]
+
+Temporary and permanent permissions are separate. For example, a temporary account ban needs both [B]efxbans.ban[/B] and [B]efxbans.ban.temporary[/B], and its duration must fit the staff member's limit. Silent actions also need the matching [B].silent[/B] permission.
+
+[LIST]
+[*][B]efxbans.ban[/B] — Use /ban; also grant its temporary or permanent node.
+[*][B]efxbans.ban.temporary[/B] — Issue temporary account bans.
+[*][B]efxbans.ban.permanent[/B] — Issue permanent account bans.
+[*][B]efxbans.ipban[/B] — Use /ipban; also grant its temporary or permanent node.
+[*][B]efxbans.ipban.temporary[/B] — Issue temporary IP bans.
+[*][B]efxbans.ipban.permanent[/B] — Issue permanent IP bans.
+[*][B]efxbans.ipban.address[/B] — Target an IP address directly; requires the normal IP ban permissions too.
+[*][B]efxbans.mute[/B] — Use /mute; also grant its temporary or permanent node.
+[*][B]efxbans.mute.temporary[/B] — Issue temporary mutes.
+[*][B]efxbans.mute.permanent[/B] — Issue permanent mutes.
+[*][B]efxbans.kick[/B] — Kick online players.
+[*][B]efxbans.warn[/B] — Warn online or offline players.
+[*][B]efxbans.ban.silent, efxbans.ipban.silent, efxbans.mute.silent, efxbans.kick.silent[/B] — Use -s for the corresponding action; the normal punishment permissions are still required.
+[*][B]efxbans.unban[/B] — Remove account bans and IP bans.
+[*][B]efxbans.unban.address[/B] — Remove a ban by IP, or an address-only IP ban by ID, including through /undo.
+[*][B]efxbans.unmute[/B] — Remove active mutes.
+[*][B]efxbans.undo[/B] — Revoke one punishment by ID.
+[*][B]efxbans.history[/B] — Use /history and /punishment.
+[*][B]efxbans.lookup[/B] — Inspect active punishments; enables ban links in /alts.
+[*][B]efxbans.sorgu[/B] — Legacy permission alias that also grants efxbans.lookup.
+[*][B]efxbans.banlist, efxbans.mutelist[/B] — Browse the corresponding active list.
+[*][B]efxbans.alts[/B] — Find accounts that shared an IP address.
+[*][B]efxbans.ip.view[/B] — See IP addresses in punishment details.
+[*][B]efxbans.notify[/B] — Receive staff punishment announcements.
+[*][B]efxbans.update.notify[/B] — Receive new-version notifications.
+[*][B]efxbans.reload[/B] — Reload settings and messages.
+[*][B]efxbans.admin[/B] — View /efxbans status; does not grant every staff permission.
+[*][B]efxbans.import[/B] — Preview and confirm imports.
+[*][B]efxbans.preset.<name>[/B] — Use the matching preset. Its punishment permissions and duration limit still apply; custom preset nodes can be set in config.yml.
+[*][B]efxbans.exempt.<kind>, efxbans.exempt.all[/B] — Protect an account from a kind of punishment, or all kinds. Kinds: ban, ipban, mute, kick, warn.
+[*][B]efxbans.bypass.exempt[/B] — Punish exempt accounts; normal punishment permissions still apply.
+[*][B]efxbans.duration.unlimited[/B] — Remove the duration cap only; does not grant punishment commands.
+[/LIST]
+
+Staff nodes listed above default to operators, except exemption, exemption-bypass and unlimited-duration nodes, which default to false. Preset permissions are configured per preset. Use your permission plugin to assign the nodes your staff need. Temporary punishments are capped at 30 days by default; permissions.duration-limits in config.yml can raise that limit per permission.
+
+Need help? [URL=https://discord.gg/efxstudios]Chat with us on Discord[/URL].
