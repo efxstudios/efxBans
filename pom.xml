@@ -32,7 +32,7 @@
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <paper.version>1.21.11-R0.1-SNAPSHOT</paper.version>
-        <adventure.version>4.25.0</adventure.version>
+        <adventure.version>5.2.0</adventure.version>
         <mockito.version>5.20.0</mockito.version>
     </properties>
 
