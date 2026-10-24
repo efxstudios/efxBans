@@ -21,7 +21,7 @@
 
     <properties>
         <revision>1.1.0</revision>
-        <!-- owner/name of the GitHub repository; used by the update checker. -->
+        <!-- Internal repository metadata; update checks use Modrinth. -->
         <github.repository>efxstudios/efxBans</github.repository>
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -97,14 +97,12 @@
                 <filtering>true</filtering>
                 <includes>
                     <include>paper-plugin.yml</include>
-                    <include>efxbans-build.properties</include>
                 </includes>
             </resource>
             <resource>
                 <directory>src/main/resources</directory>
                 <excludes>
                     <exclude>paper-plugin.yml</exclude>
-                    <exclude>efxbans-build.properties</exclude>
                 </excludes>
             </resource>
         </resources>

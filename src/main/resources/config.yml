@@ -56,8 +56,8 @@ discord:
   title: efxBans
   footer: 'efxBans • Punishment log'
 
-# Checks GitHub Releases for a newer version. Only the latest version number is read;
-# no server or player data is sent. Set enabled: false to turn it off completely.
+# Checks Modrinth for a newer stable release compatible with this Minecraft version and server.
+# No server or player data is sent. Set enabled: false to turn it off completely.
 update-checker:
   enabled: true
   notify-staff: true # Tells players with efxbans.update.notify when they join

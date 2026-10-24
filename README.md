@@ -13,12 +13,9 @@ Messages ship in English, Turkish, German, Spanish and French, and every one of 
   <a href="https://discord.gg/efxstudios"><img alt="Chat with us on Discord" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/social/discord-plural_vector.svg" height="40"></a>
   <img alt="Built with Java 21" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/built-with/java21_vector.svg" height="40">
   <img alt="Built with Maven" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/built-with/maven_vector.svg" height="40">
-  <a href="https://github.com/efxstudios/efxBans/releases/latest"><img alt="Available on GitHub" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/available/github_vector.svg" height="40"></a>
+  <a href="https://modrinth.com/project/efxbans/"><img alt="Available on Modrinth" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/available/modrinth_vector.svg" height="40"></a>
   <a href="CHANGELOG.md"><img alt="Changelog" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/documentation/changelog_vector.svg" height="40"></a>
 </p>
-
-[![CI](https://github.com/efxstudios/efxBans/actions/workflows/ci.yml/badge.svg)](https://github.com/efxstudios/efxBans/actions/workflows/ci.yml)
-[![Latest release](https://img.shields.io/github/v/release/efxstudios/efxBans)](https://github.com/efxstudios/efxBans/releases/latest)
 
 ## What it does
 
@@ -31,7 +28,7 @@ Messages ship in English, Turkish, German, Spanish and French, and every one of 
 
 ## Installation
 
-1. Download `efxBans-<version>.jar` from [Releases](https://github.com/efxstudios/efxBans/releases/latest) and put it in `plugins/`.
+1. Download `efxBans-<version>.jar` from [Modrinth](https://modrinth.com/project/efxbans/) and put it in `plugins/`.
 2. Start the server. `config.yml`, the `lang/` folder and the SQLite database are created in `plugins/efxBans/`.
 3. Grant permissions with LuckPerms or your permission plugin. Punishment commands are enabled for operators only by default.
 
@@ -167,7 +164,7 @@ Only Discord webhook URLs are accepted and mentions are disabled. Errors and rat
 
 ## Update checker
 
-Every 12 hours efxBans asks GitHub for the latest release. When there is a newer one, it says so in the console and shows a clickable message to players with `efxbans.update.notify` when they join. The check is a single GET request to `api.github.com`; nothing about your server or players is sent. Pre-releases are never suggested.
+Every 12 hours efxBans checks [Modrinth](https://modrinth.com/project/efxbans/) for a newer stable release compatible with the server's Minecraft version and Paper/Folia loader. Updates are logged to the console and announced with a clickable Modrinth link to players with `efxbans.update.notify`. The check is one anonymous GET request to `api.modrinth.com`; no server or player data is sent. Alpha, beta, draft, unlisted and incompatible versions are never suggested.
 
 ```yaml
 update-checker:
@@ -254,3 +251,5 @@ Keep SQL values bound as parameters. Player-facing text belongs in all five lang
 Configuration layout changes require a new `config-version` and migration in `Settings.steps` or `Languages.STEPS`; migration must preserve user values and back up the old file. `presets` belongs entirely to the user and must not be merged with example presets.
 
 To prepare a release from a clean `main` branch, run `./scripts/release.ps1 -Version 1.1.0`. It dates the changelog, builds and tests, then creates a local commit and tag. Review them before pushing with `git push origin main --follow-tags`; the release workflow publishes the JAR and its SHA-256 checksum. Versions follow Semantic Versioning. A version containing a suffix such as `-beta.1` is published as a prerelease.
+
+Publish the distribution JAR on Modrinth with its supported Minecraft versions and Paper/Folia loader tags. The in-game update checker uses listed Modrinth releases; the internal GitHub release workflow does not upload files to Modrinth.

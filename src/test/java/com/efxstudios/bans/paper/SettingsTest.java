@@ -174,7 +174,7 @@ class SettingsTest {
         assertEquals(List.of("msg", "tell", "r", "teammsg", "tm"), config.getStringList("mute.blocked-commands"));
         assertEquals("Benim sunucum", config.getString("discord.footer"));
         assertTrue(config.isSet("update-checker.enabled"));
-        assertTrue(text.contains("# Checks GitHub Releases"), "comments of new keys come from the template");
+        assertTrue(text.contains("# Checks Modrinth"), "comments of new keys come from the template");
         assertEquals(List.of("hile"), List.copyOf(config.getConfigurationSection("presets").getKeys(false)));
         assertEquals(List.of("hile"), List.copyOf(settings.presets().keySet()));
 

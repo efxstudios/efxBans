@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Usage lines, duration units (singular and plural), Discord field titles and the remaining hard-coded texts moved to the language files.
 
 ### Changed
+- Update checks and download notices now use the Modrinth project page; only published stable versions compatible with the running Minecraft version and Paper/Folia loader are suggested.
 - efxCore control chat compatibility is maintained only on the `restamc` branch; the main plugin enforces mutes without an efxCore dependency or integration setting.
 - Standard single-module Maven layout (`src/main`, `src/test`, `target`); development instructions are consolidated in README and the security policy lives in `.github`.
 - The default prefix no longer uses the `<shadow>` tag, which servers before 1.21.4 would show as plain text.
