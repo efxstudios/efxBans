@@ -85,7 +85,7 @@ public final class UpdateChecker {
         HttpRequest request = HttpRequest.newBuilder(VERSIONS_URL)
                 .timeout(Duration.ofSeconds(10))
                 .header("Accept", "application/json")
-                .header("User-Agent", "efxstudios/efxBans/" + current + " (" + PROJECT_URL + ")")
+                .header("User-Agent", "efxBans/" + current + " (" + PROJECT_URL + ")")
                 .GET()
                 .build();
         try {
