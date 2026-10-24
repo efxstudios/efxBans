@@ -1,9 +1,13 @@
+# config-version değerini değiştirmeyin; efxBans güncellemeden sonra dosyayı bununla yükseltir.
+config-version: 1
+
 # Bütün mesajlar MiniMessage. Liste veya YAML | ile çok satır kullanabilirsiniz.
 # Güvenli alanlar: {prefix} {player} {staff} {reason} {duration} {remaining} {id}
 # {type} {created} {expires} {status} {closed_at} {closed_by} {close_reason}
 # Duyurularda ek alan: {change_reason}. IP varsayılan mesajlarda gösterilmez.
 prefix: '<b><gradient:#FF5656:#FFB8B8><shadow:#000000:1>ᴇꜰxʙᴀɴꜱ</shadow></gradient></b> <gray>»'
-timezone: Europe/Istanbul
+# Java DateTimeFormatter biçimi. Saat dilimi config.yml içindeki timezone ayarıdır.
+date-format: 'dd.MM.yyyy HH:mm:ss'
 permanent: Kalıcı
 types:
   ban: Ban
@@ -130,7 +134,6 @@ screen:
     - '<#F2F4FF>Yetkili: <#009DFF>{staff}'
     - '<#F2F4FF>Sebep: <#009DFF>{reason}'
 
-
 # Tıklanınca GitHub sürüm sayfası açılır. Alanlar: {current} {latest}
 update:
   available: '{prefix} <#F2F4FF>Yeni efxBans sürümü: <#009DFF>{latest} <#F2F4FF>(kurulu: {current}). <#009DFF><u>İndirmek için tıklayın</u>'
@@ -147,7 +150,7 @@ usages:
   undo: '/undo <#ID>'
   history: '/history <oyuncu> [sayfa]'
   punishment: '/punishment <#ID>'
-  sorgu: '/sorgu <oyuncu|IP|#ID> [sayfa]'
+  lookup: '/lookup <oyuncu|IP|#ID> [sayfa]'
   banlist: '/banlist [sayfa]'
   mutelist: '/mutelist [sayfa]'
   alts: '/alts <oyuncu>'
@@ -159,12 +162,18 @@ texts:
   invalid-operation: Geçersiz işlem
   health-ready: Hazır
   health-unavailable: Veritabanına erişilemiyor
+# Tekil ve çoğul biçim (Türkçede aynı).
 time-units:
   week: hafta
+  weeks: hafta
   day: gün
+  days: gün
   hour: saat
+  hours: saat
   minute: dakika
+  minutes: dakika
   second: saniye
+  seconds: saniye
 hidden: Gizli
 none: '—'
 # Discord embed alan başlıkları

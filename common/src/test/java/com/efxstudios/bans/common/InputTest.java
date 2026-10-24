@@ -21,8 +21,11 @@ class InputTest {
         assertEquals(1_800_000, Times.parse("30m"));
         for (String value : new String[]{"0s", "-1d", "2years", "2h trailing", "99999999999999999999999999d", "1m2", ""})
             assertThrows(IllegalArgumentException.class, () -> Times.parse(value), value);
-        assertEquals("2 saat", Times.format(7_200_000));
-        assertEquals("1 day 2 hours", Times.format(93_600_000, new Times.Units("weeks", "day", "hours", "min", "s")));
+        assertEquals("2 hours", Times.format(7_200_000));
+        assertEquals("1 hour 1 second", Times.format(3_601_000));
+        var turkish = new Times.Units(new Times.Label("hafta", "hafta"), new Times.Label("gün", "gün"), new Times.Label("saat", "saat"),
+                new Times.Label("dakika", "dakika"), new Times.Label("saniye", "saniye"));
+        assertEquals("1 gün 2 saat", Times.format(93_600_000, turkish));
     }
 
     @Test
@@ -51,17 +54,18 @@ class InputTest {
         String uuid = "12345678-1234-1234-1234-123456789abc";
         var values = Map.of("id", "42", "uuid", uuid, "player", uuid);
 
-        assertEquals("  Gizli", PLAIN.serialize(m.render("muted", values)));
-        assertEquals("#42  Gizli", PLAIN.serialize(m.render("inquiry.entry", values)));
-        assertEquals("#42  Gizli", PLAIN.serialize(m.render("screen.ban", values)));
+        assertEquals("  Hidden", PLAIN.serialize(m.render("muted", values)));
+        assertEquals("#42  Hidden", PLAIN.serialize(m.render("inquiry.entry", values)));
+        assertEquals("#42  Hidden", PLAIN.serialize(m.render("screen.ban", values)));
         assertFalse(Webhook.quote(uuid).contains(uuid));
     }
 
     @Test
     void configurableLabelsAreUsedForDurationsAndHiddenValues() {
-        Messages m = new Messages("", Map.of("sample", "{player}", "hidden", "Hidden", "time-units.hour", "hours"), "UTC");
-        assertEquals("Hidden", PLAIN.serialize(m.render("sample", Map.of("player", "12345678-1234-1234-1234-123456789abc"))));
-        assertEquals("2 hours", m.duration(7_200_000));
+        Messages m = new Messages("", Map.of("sample", "{player}", "hidden", "Versteckt", "time-units.hours", "Stunden"), "UTC");
+        assertEquals("Versteckt", PLAIN.serialize(m.render("sample", Map.of("player", "12345678-1234-1234-1234-123456789abc"))));
+        assertEquals("2 Stunden", m.duration(7_200_000));
+        assertEquals("1 hour", m.duration(3_600_000));
     }
 
     @Test

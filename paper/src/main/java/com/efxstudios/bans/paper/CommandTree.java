@@ -53,9 +53,11 @@ import java.util.function.Supplier;
  * when the command runs, because settings and permissions can change between tab completion and execution.
  */
 public final class CommandTree {
-    /** Built-in commands in help order; usage text comes from messages.yml (usages.*). */
+    /** Built-in commands in help order; usage text comes from the language file (usages.*). */
     private static final List<String> COMMANDS = List.of("ban", "ipban", "mute", "kick", "warn", "unban", "unmute", "undo",
-            "history", "punishment", "sorgu", "banlist", "mutelist", "alts");
+            "history", "punishment", "lookup", "banlist", "mutelist", "alts");
+    /** Built-in aliases, kept for servers upgrading from releases where these were the command names. */
+    private static final Map<String, List<String>> ALIASES = Map.of("lookup", List.of("sorgu"));
     private static final List<String> DURATION_SUGGESTIONS = List.of("30m", "2h", "1d", "7d", "30d");
 
     private final BansPlugin plugin;
@@ -85,13 +87,13 @@ public final class CommandTree {
                             .executes(c -> run(c, () -> list(sender(c), label, page(c)))));
             register(registrar, node.build(), List.of());
         }
-        var inquiry = Commands.literal("sorgu")
-                .requires(s -> permissions.has(s.getSender(), "efxbans.sorgu"))
-                .executes(c -> usage(c, "sorgu"))
+        var inquiry = Commands.literal("lookup")
+                .requires(s -> permissions.has(s.getSender(), "efxbans.lookup"))
+                .executes(c -> usage(c, "lookup"))
                 .then(target().executes(c -> run(c, () -> inquiry(sender(c), targetValue(c), 1)))
                         .then(Commands.argument("page", IntegerArgumentType.integer(1, 100_000_000))
                                 .executes(c -> run(c, () -> inquiry(sender(c), targetValue(c), page(c))))));
-        register(registrar, inquiry.build(), List.of());
+        register(registrar, inquiry.build(), ALIASES.get("lookup"));
         var history = Commands.literal("history")
                 .requires(s -> permissions.has(s.getSender(), "efxbans.history"))
                 .executes(c -> usage(c, "history"))
@@ -174,13 +176,14 @@ public final class CommandTree {
         Command existing = Bukkit.getCommandMap().getCommand(label);
         boolean own = existing instanceof PluginIdentifiableCommand identifiable && identifiable.getPlugin() == plugin;
         if (!own && (existing != null || registrar.getDispatcher().getRoot().getChild(label) != null))
-            plugin.getLogger().warning("/" + label + " komutu efxBans önceliğiyle devralındı. Diğer eklentinin ad alanlı komutu korunur.");
+            plugin.getLogger().warning("/" + label + " was taken over by efxBans. The other plugin's namespaced command still works.");
         registrar.register(node, "efxBans", List.of());
     }
 
     /** After startup: warns if another plugin replaced one of our labels later on. */
     public static void audit(BansPlugin plugin) {
         Set<String> labels = new TreeSet<>(COMMANDS);
+        ALIASES.values().forEach(labels::addAll);
         labels.add("efxbans");
         plugin.settings().presets().values().stream().filter(Settings.Preset::enabled).forEach(p -> {
             labels.add(p.command());
@@ -189,8 +192,8 @@ public final class CommandTree {
         for (String label : labels) {
             Command command = Bukkit.getCommandMap().getCommand(label);
             if (command instanceof PluginIdentifiableCommand owner && owner.getPlugin() != plugin)
-                plugin.getLogger().warning("/" + label + " öncelikli kayıttan sonra " + owner.getPlugin().getName() + " tarafından değiştirildi. /efxbans:"
-                        + label + " kullanılabilir; diğer eklentinin komut ayarlarını kontrol edin.");
+                plugin.getLogger().warning("/" + label + " was replaced after efxBans registered it, by " + owner.getPlugin().getName() + ". /efxbans:"
+                        + label + " still works; check the other plugin's command settings.");
         }
     }
 
@@ -202,7 +205,7 @@ public final class CommandTree {
 
     /** Player name, UUID, IP or #ID. Suggests online players and, if offline is true, recently seen names. */
     private RequiredArgumentBuilder<CommandSourceStack, String> target(boolean offline) {
-        Supplier<String> error = () -> messages().text("texts.target-required", "Oyuncu, IP veya #ID gerekli.");
+        Supplier<String> error = () -> messages().text("texts.target-required", "A player, IP or #ID is required.");
         return Commands.argument("target", new TargetArgument(error)).suggests((c, b) -> {
             Set<String> names = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
             if (offline && plugin.engine() != null) names.addAll(plugin.engine().names());
@@ -271,7 +274,7 @@ public final class CommandTree {
         if (ip != null) {
             if (kind != Kind.IPBAN) throw new Problem("account-required");
             permissions.require(sender, "efxbans.ipban.address");
-            persist(sender, kind, duration, reason, null, messages().text("texts.ip-target", "IP hedefi"), ip, 0, presetLabel, silent);
+            persist(sender, kind, duration, reason, null, messages().text("texts.ip-target", "IP target"), ip, 0, presetLabel, silent);
             return;
         }
         resolve(sender, input, profile -> {
@@ -445,20 +448,20 @@ public final class CommandTree {
             plugin.tell(sender, "lists." + label, Map.of("page", String.valueOf(result.number()), "pages", String.valueOf(result.pages()),
                     "total", String.valueOf(result.total())));
             if (result.entries().isEmpty()) plugin.tell(sender, "lists.empty", Map.of());
-            boolean canInspect = permissions.has(sender, "efxbans.sorgu");
+            boolean canInspect = permissions.has(sender, "efxbans.lookup");
             for (var p : result.entries()) {
                 var values = messages.values(p);
                 Component line = messages.render("lists.entry", values);
-                if (canInspect) line = line.hoverEvent(messages.render("lists.hover", values)).clickEvent(ClickEvent.runCommand("/efxbans:sorgu #" + p.id()));
+                if (canInspect) line = line.hoverEvent(messages.render("lists.hover", values)).clickEvent(ClickEvent.runCommand("/efxbans:lookup #" + p.id()));
                 sender.sendMessage(line);
             }
             sender.sendMessage(navigation(result, "/efxbans:" + label + " "));
         });
     }
 
-    /** /sorgu: active bans, IP bans and mutes for a player, an IP or an #ID. */
+    /** /lookup (alias /sorgu): active bans, IP bans and mutes for a player, an IP or an #ID. */
     private void inquiry(CommandSender sender, String input, int page) {
-        permissions.require(sender, "efxbans.sorgu");
+        permissions.require(sender, "efxbans.lookup");
         Long id = input.startsWith("#") ? id(input) : null;
         String ip = Addresses.parse(input);
         if (id != null || ip != null) inquiry(sender, input, id, null, ip, page);
@@ -467,14 +470,14 @@ public final class CommandTree {
 
     private void inquiry(CommandSender sender, String input, Long id, UUID uuid, String ip, int page) {
         plugin.async(sender, s -> s.inquiry(id, uuid, ip, page), result -> {
-            if (!permissions.has(sender, "efxbans.sorgu")) return;
+            if (!permissions.has(sender, "efxbans.lookup")) return;
             plugin.tell(sender, "inquiry.header", Map.of("target", input, "total", String.valueOf(result.total())));
             if (result.entries().isEmpty()) {
                 plugin.tell(sender, "inquiry.empty", Map.of());
                 return;
             }
             for (var p : result.entries()) plugin.tell(sender, "inquiry.entry", messages().values(p));
-            sender.sendMessage(navigation(result, "/efxbans:sorgu " + input + " "));
+            sender.sendMessage(navigation(result, "/efxbans:lookup " + input + " "));
         });
     }
 
@@ -494,7 +497,7 @@ public final class CommandTree {
     private void status(CommandSender sender) {
         permissions.require(sender, "efxbans.admin");
         Messages messages = messages();
-        String health = plugin.healthy() ? messages.text("texts.health-ready", "Hazır") : messages.text("texts.health-unavailable", "Veritabanına erişilemiyor");
+        String health = plugin.healthy() ? messages.text("texts.health-ready", "Ready") : messages.text("texts.health-unavailable", "Database unreachable");
         plugin.tell(sender, "health", Map.of("health", health, "version", Bukkit.getMinecraftVersion(), "plugin", plugin.getPluginMeta().getVersion(),
                 "database", plugin.settings().database().type()));
     }
@@ -511,7 +514,7 @@ public final class CommandTree {
     }
 
     private boolean canAdmin(CommandSender sender) {
-        return List.of("reload", "admin", "history", "unban", "unmute", "undo", "alts", "banlist", "mutelist", "sorgu").stream()
+        return List.of("reload", "admin", "history", "unban", "unmute", "undo", "alts", "banlist", "mutelist", "lookup").stream()
                 .anyMatch(p -> permissions.has(sender, "efxbans." + p))
                 || Arrays.stream(Kind.values()).anyMatch(k -> permissions.canIssue(sender, k));
     }
@@ -540,7 +543,7 @@ public final class CommandTree {
     /** Built-in commands have their own line; presets share usages.preset. Inserted as literal text. */
     private String usageText(String label) {
         if (COMMANDS.contains(label)) return messages().text("usages." + label, "/" + label);
-        return messages().text("usages.preset", "/{command} <oyuncu>").replace("{command}", label);
+        return messages().text("usages.preset", "/{command} <player>").replace("{command}", label);
     }
 
     // ---------------------------------------------------------------- helpers

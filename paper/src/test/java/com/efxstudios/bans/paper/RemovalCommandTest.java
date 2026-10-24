@@ -50,7 +50,8 @@ class RemovalCommandTest {
             new CommandTree(plugin).register(registrar);
 
             CommandSourceStack source = mock(CommandSourceStack.class);
-            for (String command : List.of("unban Alice", "unmute Alice", "undo #1")) {
+            // /sorgu is the pre-1.1 name of /lookup and stays as an alias.
+            for (String command : List.of("unban Alice", "unmute Alice", "undo #1", "lookup Alice", "sorgu #5")) {
                 var parsed = dispatcher.parse(command, source);
                 assertFalse(parsed.getReader().canRead(), command);
                 assertNotNull(parsed.getContext().getCommand(), command);

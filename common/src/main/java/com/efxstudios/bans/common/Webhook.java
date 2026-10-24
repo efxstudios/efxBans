@@ -24,7 +24,7 @@ public final class Webhook implements AutoCloseable {
             actions = Set.copyOf(actions);
             // Only Discord webhook endpoints: a config value can't turn this into a request to an arbitrary host.
             if (enabled && !url.matches("https://(?:(?:canary|ptb)\\.)?discord(?:app)?\\.com/api/webhooks/[0-9]+/[A-Za-z0-9_-]+"))
-                throw new IllegalArgumentException("Discord Webhook URL geçersiz.");
+                throw new IllegalArgumentException("Invalid Discord webhook URL.");
         }
 
         /** The URL contains the webhook token. */
@@ -55,13 +55,13 @@ public final class Webhook implements AutoCloseable {
     public void send(Settings settings, Messages messages, String action, Punishment p, String staff, String changeReason) {
         if (!settings.enabled() || !settings.actions().contains(action)) return;
         String duration = !p.kind().timed() ? messages.text("none", "—")
-                : p.expires() == 0 ? messages.text("permanent", "Kalıcı") : messages.duration(p.expires() - p.created());
+                : p.expires() == 0 ? messages.text("permanent", "Permanent") : messages.duration(p.expires() - p.created());
         List<String> fields = new ArrayList<>();
-        fields.add(field(messages.text("webhook.player", "Oyuncu"), p.name()));
-        fields.add(field(messages.text("webhook.staff", "Yetkili"), staff));
-        fields.add(field(messages.text("webhook.type", "Ceza"), p.kind().name()));
-        fields.add(field(messages.text("webhook.duration", "Süre"), duration));
-        fields.add(field(messages.text("webhook.reason", "Sebep"), changeReason));
+        fields.add(field(messages.text("webhook.player", "Player"), p.name()));
+        fields.add(field(messages.text("webhook.staff", "Staff"), staff));
+        fields.add(field(messages.text("webhook.type", "Punishment"), p.kind().name()));
+        fields.add(field(messages.text("webhook.duration", "Duration"), duration));
+        fields.add(field(messages.text("webhook.reason", "Reason"), changeReason));
         if (settings.includeIp() && p.ip() != null) fields.add(field(messages.text("webhook.ip", "IP"), p.ip()));
         String json = "{\"allowed_mentions\":{\"parse\":[]},\"embeds\":[{"
                 + "\"title\":" + quote(settings.title() + " • " + action)
@@ -73,7 +73,7 @@ public final class Webhook implements AutoCloseable {
         try {
             queue.execute(() -> deliver(URI.create(settings.url()), json));
         } catch (RejectedExecutionException e) {
-            logger.accept("Discord kuyruğu dolu; bildirim gönderilemedi (#" + p.id() + "). Ceza veritabanında kayıtlı.");
+            logger.accept("Discord queue is full; notification not sent (#" + p.id() + "). The punishment is saved in the database.");
         }
     }
 
@@ -90,7 +90,7 @@ public final class Webhook implements AutoCloseable {
                 int status = response.statusCode();
                 if (status >= 200 && status < 300) return true;
                 if (status != 429 && status < 500) {
-                    logger.accept("Discord bildirimi reddedildi: HTTP " + status);
+                    logger.accept("Discord rejected the notification: HTTP " + status);
                     return false;
                 }
                 if (attempt == ATTEMPTS - 1) break;
@@ -104,7 +104,7 @@ public final class Webhook implements AutoCloseable {
                 if (attempt == ATTEMPTS - 1) break;
             }
         }
-        logger.accept("Discord bildirimi 3 denemede gönderilemedi; ceza kaydı korunuyor.");
+        logger.accept("Discord notification failed after 3 attempts; the punishment is still saved.");
         return false;
     }
 

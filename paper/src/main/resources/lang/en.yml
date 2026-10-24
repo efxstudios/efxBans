@@ -1,0 +1,199 @@
+# Do not edit config-version; efxBans uses it to upgrade this file after an update.
+config-version: 1
+
+# Every message is MiniMessage. Use a list or a YAML | block for multiple lines.
+# Placeholders: {prefix} {player} {staff} {reason} {duration} {remaining} {id}
+# {type} {created} {expires} {status} {closed_at} {closed_by} {close_reason}
+# Announcements also have {change_reason}. The IP is never part of the default messages.
+prefix: '<b><gradient:#FF5656:#FFB8B8><shadow:#000000:1>ᴇꜰxʙᴀɴꜱ</shadow></gradient></b> <gray>»'
+# Java DateTimeFormatter pattern. The timezone is set in config.yml.
+date-format: 'yyyy-MM-dd HH:mm:ss'
+permanent: Permanent
+types:
+  ban: Ban
+  ipban: IP ban
+  mute: Mute
+  kick: Kick
+  warn: Warning
+status:
+  ACTIVE: Active
+  EXPIRED: Expired
+  REMOVED: Removed
+  REVOKED: Revoked
+  EXECUTED: Executed
+
+error: '{prefix} <#FF5656>{error}'
+errors:
+  player-offline: '{prefix} <#FF5656>{player} <#F2F4FF>is not online. <#009DFF>Kicks <#F2F4FF>only work on online players.'
+  no-permission: '{prefix} <#F2F4FF>You don''t have permission to do this: <#009DFF>{permission}'
+  maximum-duration: '{prefix} <#F2F4FF>Your maximum punishment duration is <#009DFF>{maximum}'
+  invalid-duration: '{prefix} <#FF5656>Invalid duration. <#F2F4FF>Examples: <#009DFF>30m, 2h, 7d, 1d2h'
+  invalid-reason: '{prefix} <#F2F4FF>The reason must be <#009DFF>1–1000 characters<#F2F4FF>.'
+  reason-required: '{prefix} <#F2F4FF>Write a reason after the duration. <#009DFF>{usage}'
+  account-required: '{prefix} <#F2F4FF>Enter a valid <#009DFF>player name<#F2F4FF>.'
+  ambiguous-name: '{prefix} <#F2F4FF>Several accounts have used this name; <#009DFF>use the player''s current name<#F2F4FF>.'
+  unknown-ip: '{prefix} <#F2F4FF>No IP address is recorded for this player. <#009DFF>They have to join the server first.'
+  duplicate-active: '{prefix} <#F2F4FF>An <#009DFF>active punishment <#F2F4FF>of this type already exists; remove or undo it first.'
+  preset-disabled: '{prefix} <#F2F4FF>This preset was disabled or removed. <#009DFF>Restart the server <#F2F4FF>to update the command tree.'
+  exempt: '{prefix} <#FF5656>This player is exempt from this punishment.'
+  id-required: '{prefix} <#F2F4FF>Enter a valid punishment ID: <#009DFF>#123'
+database-error: '{prefix} <#F2F4FF>The result could not be confirmed. <#009DFF>Check the history and the database connection <#F2F4FF>before trying again; existing records are safe.'
+unavailable: '{prefix} <#F2F4FF>The punishment system can''t verify anything right now. <#009DFF>Please try again in a moment.'
+unknown-player: '{prefix} <#FF5656>{player} <#F2F4FF>could not be verified. Use the name of a known player.'
+usage: '{prefix} <#F2F4FF>Usage: <#009DFF>{usage}'
+not-found: '{prefix} <#F2F4FF>No <#009DFF>matching records <#F2F4FF>were found.'
+# Confirmations go only to the staff member or console that ran the command; announcements are separate.
+confirmation:
+  ban: '{prefix} <#55FF55>{player} was banned.'
+  ipban: '{prefix} <#55FF55>{player} was IP banned.'
+  mute: '{prefix} <#55FF55>{player} was muted.'
+  kick: '{prefix} <#55FF55>{player} was kicked.'
+  warn: '{prefix} <#55FF55>{player} was warned.'
+  silent: '{prefix} <#55FF55>{player}: {type} applied silently.'
+  unban: '{prefix} <#55FF55>{player} was unbanned.'
+  unmute: '{prefix} <#55FF55>{player} was unmuted.'
+  undo: '{prefix} <#55FF55>The punishment of {player} was undone.'
+muted: '{prefix} <#F2F4FF>You are <#FF5656>muted. <#F2F4FF>Reason: <#009DFF>{reason} <#F2F4FF>• Remaining: <#009DFF>{remaining}'
+muted-notice: '{prefix} <#009DFF>{staff} <#F2F4FF>muted you. Duration: <#009DFF>{duration} <#F2F4FF>• Reason: <#009DFF>{reason}'
+warned: '{prefix} <#009DFF>{staff} <#F2F4FF>warned you. Reason: <#009DFF>{reason}'
+reload: '{prefix} <#F2F4FF>Messages, notifications, permission limits and existing presets <#009DFF>were reloaded.'
+reload-restart: '{prefix} <#F2F4FF>Safe settings were reloaded. <#009DFF>Restart the server fully <#F2F4FF>for command name, alias or database changes.'
+health: '{prefix} <#F2F4FF>Status: <#009DFF>{health} <#F2F4FF>• efxBans {plugin} • Paper {version} • {database}'
+help-header: '{prefix} <#F2F4FF>Punishment management <#009DFF>• efxBans'
+help-entry: '<#009DFF>{usage}'
+history-header: '{prefix} <#F2F4FF>Punishment history of <#FF5656>{player} <#F2F4FF>• Page <#009DFF>{page}'
+history-entry: '<#009DFF>#{id} <#F2F4FF>{type} • <#FF5656>{status} <#F2F4FF>• {created} • <#009DFF>{staff} <#F2F4FF>• {duration}<newline><#F2F4FF>  Reason: <#009DFF>{reason}'
+detail:
+  - '{prefix} <#009DFF>#{id} <#F2F4FF>• {type} • <#FF5656>{status}'
+  - '<#F2F4FF>Player: <#FF5656>{player} <#F2F4FF>• Staff: <#009DFF>{staff}'
+  - '<#F2F4FF>Reason: <#009DFF>{reason}'
+  - '<#F2F4FF>Start: <#009DFF>{created} <#F2F4FF>• End: <#009DFF>{expires}'
+  - '<#F2F4FF>Duration: <#009DFF>{duration} <#F2F4FF>• Remaining: <#009DFF>{remaining}'
+  - '<#F2F4FF>Removed / undone by: <#009DFF>{closed_by} <#F2F4FF>• {closed_at}'
+audit-entry: '<gray>{created} <#009DFF>{action} <#F2F4FF>• {staff} • {reason}'
+ip-detail: '{prefix} <#F2F4FF>Private IP information: <#009DFF>{ip}'
+alts-header: '{prefix} <#F2F4FF>Accounts that shared an IP with <#FF5656>{player} <#F2F4FF>in the past. <#009DFF>This does not prove they are the same person.'
+alts-entry: '<#FF5656>{player}'
+
+broadcast:
+  unban: '{prefix} <#009DFF>{staff} <#F2F4FF>unbanned <#FF5656>{player}<#F2F4FF>.'
+  unmute: '{prefix} <#009DFF>{staff} <#F2F4FF>unmuted <#FF5656>{player}<#F2F4FF>.'
+  ban: '{prefix} <#009DFF>{staff} <#F2F4FF>banned <#FF5656>{player}<#F2F4FF>. Duration: <#009DFF>{duration} <#F2F4FF>• Reason: <#009DFF>{reason}'
+  ipban: '{prefix} <#009DFF>{staff} <#F2F4FF>IP banned <#FF5656>{player}<#F2F4FF>. Duration: <#009DFF>{duration} <#F2F4FF>• Reason: <#009DFF>{reason}'
+  mute: '{prefix} <#009DFF>{staff} <#F2F4FF>muted <#FF5656>{player}<#F2F4FF>. Duration: <#009DFF>{duration} <#F2F4FF>• Reason: <#009DFF>{reason}'
+  kick: '{prefix} <#009DFF>{staff} <#F2F4FF>kicked <#FF5656>{player}<#F2F4FF>. Reason: <#009DFF>{reason}'
+  warn: '{prefix} <#009DFF>{staff} <#F2F4FF>warned <#FF5656>{player}<#F2F4FF>. Reason: <#009DFF>{reason}'
+  remove: '{prefix} <#009DFF>{staff} <#F2F4FF>removed the punishment of <#FF5656>{player}<#F2F4FF>.'
+  undo: '{prefix} <#009DFF>{staff} <#F2F4FF>undid the punishment of <#FF5656>{player}<#F2F4FF>.'
+
+lists:
+  banlist: '{prefix} <#F2F4FF>Active bans <#009DFF>• {total} records • Page {page}/{pages}'
+  mutelist: '{prefix} <#F2F4FF>Active mutes <#009DFF>• {total} records • Page {page}/{pages}'
+  empty: '<#F2F4FF>There are no active punishments.'
+  entry: '<#009DFF>#{id} <#FF5656>{player} <#F2F4FF>• {type} • <#009DFF>{remaining} <#F2F4FF>• {reason}'
+  hover: '<#F2F4FF>Staff: <#009DFF>{staff}<newline><#F2F4FF>Start: <#009DFF>{created}<newline><#F2F4FF>Click for details.'
+  previous: '<#009DFF>« Previous  '
+  next: '<#009DFF>  Next »'
+  page: '<#F2F4FF>[{page}/{pages}]'
+
+screen:
+  ban-issued:
+    - '{prefix}'
+    - '<#FF5656>You have been banned from this server.'
+    - '<#F2F4FF>Staff: <#009DFF>{staff}'
+    - '<#F2F4FF>Reason: <#009DFF>{reason}'
+    - '<#F2F4FF>Duration: <#009DFF>{duration}'
+  ipban-issued:
+    - '{prefix}'
+    - '<#FF5656>Your account or connection has been banned.'
+    - '<#F2F4FF>Staff: <#009DFF>{staff}'
+    - '<#F2F4FF>Reason: <#009DFF>{reason}'
+    - '<#F2F4FF>Duration: <#009DFF>{duration}'
+  ban:
+    - '{prefix}'
+    - '<#FF5656>You are banned from this server.'
+    - ''
+    - '<#F2F4FF>Player: <#FF5656>{player}'
+    - '<#F2F4FF>Staff: <#009DFF>{staff}'
+    - '<#F2F4FF>Reason: <#009DFF>{reason}'
+    - '<#F2F4FF>Duration: <#009DFF>{duration}'
+    - '<#F2F4FF>Remaining: <#009DFF>{remaining}'
+    - '<#F2F4FF>Punishment ID: <#009DFF>#{id}'
+  ipban:
+    - '{prefix}'
+    - '<#FF5656>Your account or connection is banned.'
+    - ''
+    - '<#F2F4FF>Staff: <#009DFF>{staff}'
+    - '<#F2F4FF>Reason: <#009DFF>{reason}'
+    - '<#F2F4FF>Duration: <#009DFF>{duration}'
+    - '<#F2F4FF>Remaining: <#009DFF>{remaining}'
+    - '<#F2F4FF>Punishment ID: <#009DFF>#{id}'
+  kick:
+    - '{prefix}'
+    - '<#FF5656>You were kicked from the server.'
+    - '<#F2F4FF>Staff: <#009DFF>{staff}'
+    - '<#F2F4FF>Reason: <#009DFF>{reason}'
+
+# Clicking opens the GitHub release page. Placeholders: {current} {latest}
+update:
+  available: '{prefix} <#F2F4FF>A new efxBans version is available: <#009DFF>{latest} <#F2F4FF>(installed: {current}). <#009DFF><u>Click to download</u>'
+
+# The entries below are plain text, inserted into other messages as they are.
+usages:
+  ban: '/ban [-s] <player> [duration] <reason>'
+  ipban: '/ipban [-s] <player|IP> [duration] <reason>'
+  mute: '/mute [-s] <player> [duration] <reason>'
+  kick: '/kick [-s] <player> <reason>'
+  warn: '/warn <player> <reason>'
+  unban: '/unban <#ID|player|IP>'
+  unmute: '/unmute <#ID|player>'
+  undo: '/undo <#ID>'
+  history: '/history <player> [page]'
+  punishment: '/punishment <#ID>'
+  lookup: '/lookup <player|IP|#ID> [page]'
+  banlist: '/banlist [page]'
+  mutelist: '/mutelist [page]'
+  alts: '/alts <player>'
+  reload: '/efxbans reload'
+  preset: '/{command} <player>'
+texts:
+  ip-target: IP target
+  target-required: 'A player, IP or #ID is required.'
+  invalid-operation: Invalid operation
+  health-ready: Ready
+  health-unavailable: Database unreachable
+# Singular and plural form of each unit.
+time-units:
+  week: week
+  weeks: weeks
+  day: day
+  days: days
+  hour: hour
+  hours: hours
+  minute: minute
+  minutes: minutes
+  second: second
+  seconds: seconds
+hidden: Hidden
+none: '—'
+# Discord embed field titles
+webhook:
+  player: Player
+  staff: Staff
+  type: Punishment
+  duration: Duration
+  reason: Reason
+  ip: IP
+
+inquiry:
+  header: '{prefix} <#F2F4FF>Active punishments: <#FF5656>{target} <#009DFF>• {total} records'
+  empty: '{prefix} <#F2F4FF>There are no active punishments for this target.'
+  entry:
+    - '<dark_gray>────────────────────────────────'
+    - '<#F2F4FF>Punishment: <#009DFF>#{id} • {type} <#F2F4FF>• <#FF5656>{status}'
+    - '<#F2F4FF>Player: <#FF5656>{player}'
+    - '<#F2F4FF>Staff: <#009DFF>{staff}'
+    - '<#F2F4FF>Reason: <#009DFF>{reason}'
+    - '<#F2F4FF>Issued: <#009DFF>{created}'
+    - '<#F2F4FF>Duration: <#009DFF>{duration} <#F2F4FF>• Remaining: <#009DFF>{remaining}'
+    - '<#F2F4FF>Ends: <#009DFF>{expires}'

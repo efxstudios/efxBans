@@ -14,7 +14,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Renders messages.yml templates. Values are always inserted as unparsed placeholders, so player names
+ * Renders language-file templates. Values are always inserted as unparsed placeholders, so player names
  * and reasons can never become MiniMessage tags, click events or other placeholders.
  */
 public final class Messages {
@@ -35,18 +35,23 @@ public final class Messages {
         this.templates = Map.copyOf(templates);
         this.prefix = MM.deserialize(prefix);
         this.zone = ZoneId.of(zone);
-        this.dates = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss").withZone(this.zone);
+        this.dates = DateTimeFormatter.ofPattern(text("date-format", "yyyy-MM-dd HH:mm:ss")).withZone(this.zone);
         // Fail on load, not on first use, if a template is malformed.
         templates.values().forEach(MM::deserialize);
         Times.Units d = Times.Units.DEFAULT;
-        this.units = new Times.Units(text("time-units.week", d.week()), text("time-units.day", d.day()),
-                text("time-units.hour", d.hour()), text("time-units.minute", d.minute()), text("time-units.second", d.second()));
-        this.hidden = text("hidden", "Gizli");
+        this.units = new Times.Units(label("week", d.week()), label("day", d.day()), label("hour", d.hour()),
+                label("minute", d.minute()), label("second", d.second()));
+        this.hidden = text("hidden", "Hidden");
         this.none = text("none", "—");
     }
 
+    /** time-units.hour (singular) and time-units.hours (plural). */
+    private Times.Label label(String unit, Times.Label fallback) {
+        return new Times.Label(text("time-units." + unit, fallback.one()), text("time-units." + unit + "s", fallback.many()));
+    }
+
     public Component render(String key, Map<String, String> values) {
-        String template = templates.getOrDefault(key, "{prefix} <#FF5656>Eksik mesaj: " + key);
+        String template = templates.getOrDefault(key, "{prefix} <#FF5656>Missing message: " + key);
         template = template.replace("{uuid}", "");
         if (!key.startsWith("lists.") && !ID_VISIBLE.contains(key)) template = template.replaceAll("#?\\{id}", "");
         TagResolver.Builder tags = TagResolver.builder().resolver(Placeholder.component("efx_prefix", prefix));
@@ -69,7 +74,7 @@ public final class Messages {
     }
 
     public static String hideUuid(String value) {
-        return hideUuid(value, "Gizli");
+        return hideUuid(value, "Hidden");
     }
 
     public static String hideUuid(String value, String replacement) {
@@ -79,7 +84,7 @@ public final class Messages {
     /** Standard placeholder values of a punishment. The IP is never part of them. */
     public Map<String, String> values(Punishment p) {
         long now = System.currentTimeMillis();
-        String permanent = text("permanent", "Kalıcı");
+        String permanent = text("permanent", "Permanent");
         Map<String, String> v = new HashMap<>();
         v.put("player", p.name());
         v.put("staff", p.actorName());

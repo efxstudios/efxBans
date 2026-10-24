@@ -1,0 +1,199 @@
+# config-version nicht ändern; efxBans aktualisiert diese Datei damit nach einem Update.
+config-version: 1
+
+# Alle Nachrichten sind MiniMessage. Für mehrere Zeilen eine Liste oder einen YAML-|-Block verwenden.
+# Platzhalter: {prefix} {player} {staff} {reason} {duration} {remaining} {id}
+# {type} {created} {expires} {status} {closed_at} {closed_by} {close_reason}
+# Ankündigungen haben zusätzlich {change_reason}. Die IP steht in keiner Standardnachricht.
+prefix: '<b><gradient:#FF5656:#FFB8B8><shadow:#000000:1>ᴇꜰxʙᴀɴꜱ</shadow></gradient></b> <gray>»'
+# Java-DateTimeFormatter-Muster. Die Zeitzone wird in der config.yml festgelegt.
+date-format: 'dd.MM.yyyy HH:mm:ss'
+permanent: Dauerhaft
+types:
+  ban: Bann
+  ipban: IP-Bann
+  mute: Stummschaltung
+  kick: Kick
+  warn: Verwarnung
+status:
+  ACTIVE: Aktiv
+  EXPIRED: Abgelaufen
+  REMOVED: Aufgehoben
+  REVOKED: Widerrufen
+  EXECUTED: Ausgeführt
+
+error: '{prefix} <#FF5656>{error}'
+errors:
+  player-offline: '{prefix} <#FF5656>{player} <#F2F4FF>ist nicht online. <#009DFF>Kicks <#F2F4FF>sind nur bei Spielern möglich, die online sind.'
+  no-permission: '{prefix} <#F2F4FF>Dafür fehlt dir die Berechtigung: <#009DFF>{permission}'
+  maximum-duration: '{prefix} <#F2F4FF>Deine maximale Strafdauer: <#009DFF>{maximum}'
+  invalid-duration: '{prefix} <#FF5656>Ungültige Dauer. <#F2F4FF>Beispiele: <#009DFF>30m, 2h, 7d, 1d2h'
+  invalid-reason: '{prefix} <#F2F4FF>Der Grund muss <#009DFF>1–1000 Zeichen <#F2F4FF>lang sein.'
+  reason-required: '{prefix} <#F2F4FF>Gib nach der Dauer einen Grund an. <#009DFF>{usage}'
+  account-required: '{prefix} <#F2F4FF>Gib einen gültigen <#009DFF>Spielernamen <#F2F4FF>ein.'
+  ambiguous-name: '{prefix} <#F2F4FF>Mehrere Accounts haben diesen Namen benutzt; <#009DFF>verwende den aktuellen Namen <#F2F4FF>des Spielers.'
+  unknown-ip: '{prefix} <#F2F4FF>Für diesen Spieler ist keine IP-Adresse gespeichert. <#009DFF>Er muss den Server erst einmal betreten haben.'
+  duplicate-active: '{prefix} <#F2F4FF>Es gibt bereits eine <#009DFF>aktive Strafe <#F2F4FF>dieser Art; hebe sie zuerst auf oder widerrufe sie.'
+  preset-disabled: '{prefix} <#F2F4FF>Dieses Preset wurde deaktiviert oder entfernt. <#009DFF>Starte den Server neu, <#F2F4FF>um den Befehlsbaum zu aktualisieren.'
+  exempt: '{prefix} <#FF5656>Dieser Spieler ist von dieser Strafe ausgenommen.'
+  id-required: '{prefix} <#F2F4FF>Gib eine gültige Straf-ID ein: <#009DFF>#123'
+database-error: '{prefix} <#F2F4FF>Das Ergebnis konnte nicht bestätigt werden. <#009DFF>Prüfe den Verlauf und die Datenbankverbindung, <#F2F4FF>bevor du es erneut versuchst; vorhandene Einträge bleiben erhalten.'
+unavailable: '{prefix} <#F2F4FF>Das Strafsystem kann gerade nichts überprüfen. <#009DFF>Bitte versuche es gleich noch einmal.'
+unknown-player: '{prefix} <#FF5656>{player} <#F2F4FF>konnte nicht überprüft werden. Verwende den Namen eines bekannten Spielers.'
+usage: '{prefix} <#F2F4FF>Verwendung: <#009DFF>{usage}'
+not-found: '{prefix} <#F2F4FF>Keine <#009DFF>passenden Einträge <#F2F4FF>gefunden.'
+# Bestätigungen gehen nur an das Teammitglied bzw. die Konsole, die den Befehl ausgeführt hat.
+confirmation:
+  ban: '{prefix} <#55FF55>{player} wurde gebannt.'
+  ipban: '{prefix} <#55FF55>{player} wurde per IP gebannt.'
+  mute: '{prefix} <#55FF55>{player} wurde stummgeschaltet.'
+  kick: '{prefix} <#55FF55>{player} wurde gekickt.'
+  warn: '{prefix} <#55FF55>{player} wurde verwarnt.'
+  silent: '{prefix} <#55FF55>{player}: {type} still angewendet.'
+  unban: '{prefix} <#55FF55>Der Bann von {player} wurde aufgehoben.'
+  unmute: '{prefix} <#55FF55>Die Stummschaltung von {player} wurde aufgehoben.'
+  undo: '{prefix} <#55FF55>Die Strafe von {player} wurde widerrufen.'
+muted: '{prefix} <#F2F4FF>Du bist <#FF5656>stummgeschaltet. <#F2F4FF>Grund: <#009DFF>{reason} <#F2F4FF>• Verbleibend: <#009DFF>{remaining}'
+muted-notice: '{prefix} <#009DFF>{staff} <#F2F4FF>hat dich stummgeschaltet. Dauer: <#009DFF>{duration} <#F2F4FF>• Grund: <#009DFF>{reason}'
+warned: '{prefix} <#009DFF>{staff} <#F2F4FF>hat dich verwarnt. Grund: <#009DFF>{reason}'
+reload: '{prefix} <#F2F4FF>Nachrichten, Benachrichtigungen, Berechtigungsgrenzen und vorhandene Presets <#009DFF>wurden neu geladen.'
+reload-restart: '{prefix} <#F2F4FF>Sichere Einstellungen wurden neu geladen. <#009DFF>Starte den Server vollständig neu, <#F2F4FF>damit Änderungen an Befehlsnamen, Aliasen oder der Datenbank greifen.'
+health: '{prefix} <#F2F4FF>Status: <#009DFF>{health} <#F2F4FF>• efxBans {plugin} • Paper {version} • {database}'
+help-header: '{prefix} <#F2F4FF>Strafverwaltung <#009DFF>• efxBans'
+help-entry: '<#009DFF>{usage}'
+history-header: '{prefix} <#F2F4FF>Strafverlauf von <#FF5656>{player} <#F2F4FF>• Seite <#009DFF>{page}'
+history-entry: '<#009DFF>#{id} <#F2F4FF>{type} • <#FF5656>{status} <#F2F4FF>• {created} • <#009DFF>{staff} <#F2F4FF>• {duration}<newline><#F2F4FF>  Grund: <#009DFF>{reason}'
+detail:
+  - '{prefix} <#009DFF>#{id} <#F2F4FF>• {type} • <#FF5656>{status}'
+  - '<#F2F4FF>Spieler: <#FF5656>{player} <#F2F4FF>• Teammitglied: <#009DFF>{staff}'
+  - '<#F2F4FF>Grund: <#009DFF>{reason}'
+  - '<#F2F4FF>Beginn: <#009DFF>{created} <#F2F4FF>• Ende: <#009DFF>{expires}'
+  - '<#F2F4FF>Dauer: <#009DFF>{duration} <#F2F4FF>• Verbleibend: <#009DFF>{remaining}'
+  - '<#F2F4FF>Aufgehoben / widerrufen von: <#009DFF>{closed_by} <#F2F4FF>• {closed_at}'
+audit-entry: '<gray>{created} <#009DFF>{action} <#F2F4FF>• {staff} • {reason}'
+ip-detail: '{prefix} <#F2F4FF>Vertrauliche IP-Information: <#009DFF>{ip}'
+alts-header: '{prefix} <#F2F4FF>Accounts, die früher eine IP mit <#FF5656>{player} <#F2F4FF>geteilt haben. <#009DFF>Das beweist nicht, dass es dieselbe Person ist.'
+alts-entry: '<#FF5656>{player}'
+
+broadcast:
+  unban: '{prefix} <#009DFF>{staff} <#F2F4FF>hat den Bann von <#FF5656>{player} <#F2F4FF>aufgehoben.'
+  unmute: '{prefix} <#009DFF>{staff} <#F2F4FF>hat die Stummschaltung von <#FF5656>{player} <#F2F4FF>aufgehoben.'
+  ban: '{prefix} <#009DFF>{staff} <#F2F4FF>hat <#FF5656>{player} <#F2F4FF>gebannt. Dauer: <#009DFF>{duration} <#F2F4FF>• Grund: <#009DFF>{reason}'
+  ipban: '{prefix} <#009DFF>{staff} <#F2F4FF>hat <#FF5656>{player} <#F2F4FF>per IP gebannt. Dauer: <#009DFF>{duration} <#F2F4FF>• Grund: <#009DFF>{reason}'
+  mute: '{prefix} <#009DFF>{staff} <#F2F4FF>hat <#FF5656>{player} <#F2F4FF>stummgeschaltet. Dauer: <#009DFF>{duration} <#F2F4FF>• Grund: <#009DFF>{reason}'
+  kick: '{prefix} <#009DFF>{staff} <#F2F4FF>hat <#FF5656>{player} <#F2F4FF>gekickt. Grund: <#009DFF>{reason}'
+  warn: '{prefix} <#009DFF>{staff} <#F2F4FF>hat <#FF5656>{player} <#F2F4FF>verwarnt. Grund: <#009DFF>{reason}'
+  remove: '{prefix} <#009DFF>{staff} <#F2F4FF>hat die Strafe von <#FF5656>{player} <#F2F4FF>aufgehoben.'
+  undo: '{prefix} <#009DFF>{staff} <#F2F4FF>hat die Strafe von <#FF5656>{player} <#F2F4FF>widerrufen.'
+
+lists:
+  banlist: '{prefix} <#F2F4FF>Aktive Banns <#009DFF>• {total} Einträge • Seite {page}/{pages}'
+  mutelist: '{prefix} <#F2F4FF>Aktive Stummschaltungen <#009DFF>• {total} Einträge • Seite {page}/{pages}'
+  empty: '<#F2F4FF>Es gibt keine aktiven Strafen.'
+  entry: '<#009DFF>#{id} <#FF5656>{player} <#F2F4FF>• {type} • <#009DFF>{remaining} <#F2F4FF>• {reason}'
+  hover: '<#F2F4FF>Teammitglied: <#009DFF>{staff}<newline><#F2F4FF>Beginn: <#009DFF>{created}<newline><#F2F4FF>Für Details klicken.'
+  previous: '<#009DFF>« Zurück  '
+  next: '<#009DFF>  Weiter »'
+  page: '<#F2F4FF>[{page}/{pages}]'
+
+screen:
+  ban-issued:
+    - '{prefix}'
+    - '<#FF5656>Du wurdest von diesem Server gebannt.'
+    - '<#F2F4FF>Teammitglied: <#009DFF>{staff}'
+    - '<#F2F4FF>Grund: <#009DFF>{reason}'
+    - '<#F2F4FF>Dauer: <#009DFF>{duration}'
+  ipban-issued:
+    - '{prefix}'
+    - '<#FF5656>Dein Account oder deine Verbindung wurde gebannt.'
+    - '<#F2F4FF>Teammitglied: <#009DFF>{staff}'
+    - '<#F2F4FF>Grund: <#009DFF>{reason}'
+    - '<#F2F4FF>Dauer: <#009DFF>{duration}'
+  ban:
+    - '{prefix}'
+    - '<#FF5656>Du bist von diesem Server gebannt.'
+    - ''
+    - '<#F2F4FF>Spieler: <#FF5656>{player}'
+    - '<#F2F4FF>Teammitglied: <#009DFF>{staff}'
+    - '<#F2F4FF>Grund: <#009DFF>{reason}'
+    - '<#F2F4FF>Dauer: <#009DFF>{duration}'
+    - '<#F2F4FF>Verbleibend: <#009DFF>{remaining}'
+    - '<#F2F4FF>Straf-ID: <#009DFF>#{id}'
+  ipban:
+    - '{prefix}'
+    - '<#FF5656>Dein Account oder deine Verbindung ist gebannt.'
+    - ''
+    - '<#F2F4FF>Teammitglied: <#009DFF>{staff}'
+    - '<#F2F4FF>Grund: <#009DFF>{reason}'
+    - '<#F2F4FF>Dauer: <#009DFF>{duration}'
+    - '<#F2F4FF>Verbleibend: <#009DFF>{remaining}'
+    - '<#F2F4FF>Straf-ID: <#009DFF>#{id}'
+  kick:
+    - '{prefix}'
+    - '<#FF5656>Du wurdest vom Server gekickt.'
+    - '<#F2F4FF>Teammitglied: <#009DFF>{staff}'
+    - '<#F2F4FF>Grund: <#009DFF>{reason}'
+
+# Ein Klick öffnet die GitHub-Release-Seite. Platzhalter: {current} {latest}
+update:
+  available: '{prefix} <#F2F4FF>Neue efxBans-Version verfügbar: <#009DFF>{latest} <#F2F4FF>(installiert: {current}). <#009DFF><u>Zum Herunterladen klicken</u>'
+
+# Die folgenden Einträge sind reiner Text und werden unverändert in andere Nachrichten eingesetzt.
+usages:
+  ban: '/ban [-s] <Spieler> [Dauer] <Grund>'
+  ipban: '/ipban [-s] <Spieler|IP> [Dauer] <Grund>'
+  mute: '/mute [-s] <Spieler> [Dauer] <Grund>'
+  kick: '/kick [-s] <Spieler> <Grund>'
+  warn: '/warn <Spieler> <Grund>'
+  unban: '/unban <#ID|Spieler|IP>'
+  unmute: '/unmute <#ID|Spieler>'
+  undo: '/undo <#ID>'
+  history: '/history <Spieler> [Seite]'
+  punishment: '/punishment <#ID>'
+  lookup: '/lookup <Spieler|IP|#ID> [Seite]'
+  banlist: '/banlist [Seite]'
+  mutelist: '/mutelist [Seite]'
+  alts: '/alts <Spieler>'
+  reload: '/efxbans reload'
+  preset: '/{command} <Spieler>'
+texts:
+  ip-target: IP-Ziel
+  target-required: 'Ein Spieler, eine IP oder eine #ID ist erforderlich.'
+  invalid-operation: Ungültiger Vorgang
+  health-ready: Bereit
+  health-unavailable: Datenbank nicht erreichbar
+# Singular und Plural jeder Einheit.
+time-units:
+  week: Woche
+  weeks: Wochen
+  day: Tag
+  days: Tage
+  hour: Stunde
+  hours: Stunden
+  minute: Minute
+  minutes: Minuten
+  second: Sekunde
+  seconds: Sekunden
+hidden: Verborgen
+none: '—'
+# Feldtitel im Discord-Embed
+webhook:
+  player: Spieler
+  staff: Teammitglied
+  type: Strafe
+  duration: Dauer
+  reason: Grund
+  ip: IP
+
+inquiry:
+  header: '{prefix} <#F2F4FF>Aktive Strafen: <#FF5656>{target} <#009DFF>• {total} Einträge'
+  empty: '{prefix} <#F2F4FF>Für dieses Ziel gibt es keine aktiven Strafen.'
+  entry:
+    - '<dark_gray>────────────────────────────────'
+    - '<#F2F4FF>Strafe: <#009DFF>#{id} • {type} <#F2F4FF>• <#FF5656>{status}'
+    - '<#F2F4FF>Spieler: <#FF5656>{player}'
+    - '<#F2F4FF>Teammitglied: <#009DFF>{staff}'
+    - '<#F2F4FF>Grund: <#009DFF>{reason}'
+    - '<#F2F4FF>Erteilt: <#009DFF>{created}'
+    - '<#F2F4FF>Dauer: <#009DFF>{duration} <#F2F4FF>• Verbleibend: <#009DFF>{remaining}'
+    - '<#F2F4FF>Ende: <#009DFF>{expires}'

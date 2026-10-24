@@ -2,7 +2,7 @@ package com.efxstudios.bans.common;
 
 import java.util.Map;
 
-/** An expected user error. The key selects a configurable message under {@code errors.} in messages.yml. */
+/** An expected user error. The key selects a configurable message under {@code errors.} in the language files. */
 public final class Problem extends IllegalArgumentException {
     private final String key;
     private final Map<String, String> values;

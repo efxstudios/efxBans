@@ -51,7 +51,7 @@ public final class BansPlugin extends JavaPlugin {
         try {
             settings = Settings.load(this);
         } catch (Exception e) {
-            getLogger().severe("Ayarlar yüklenemedi: " + e.getMessage());
+            getLogger().severe("Could not load the configuration: " + e.getMessage());
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
@@ -70,8 +70,8 @@ public final class BansPlugin extends JavaPlugin {
         // Also detects commands registered by plugins after this plugin's lifecycle handler.
         Bukkit.getScheduler().runTask(this, () -> CommandTree.audit(this));
         updates.configure(settings.updates());
-        getLogger().info("efxBans " + getPluginMeta().getVersion() + " hazır. Paper " + Bukkit.getMinecraftVersion() + "; "
-                + settings.database().type() + "; preset komut değişiklikleri yeniden başlatma gerektirir.");
+        getLogger().info("efxBans " + getPluginMeta().getVersion() + " ready. Paper " + Bukkit.getMinecraftVersion() + "; "
+                + settings.database().type() + "; changes to preset commands need a restart.");
     }
 
     private void openDatabase() {
@@ -79,12 +79,12 @@ public final class BansPlugin extends JavaPlugin {
         try {
             store = new Store(settings.database());
             engine = new Engine(store, settings.pollMillis(), this::changes,
-                    e -> getLogger().severe("Veritabanı güncellemesi başarısız; eski ceza önbelleği korundu: " + e.getClass().getSimpleName()));
+                    e -> getLogger().severe("Database refresh failed; keeping the previous punishment cache: " + e.getClass().getSimpleName()));
         } catch (Exception e) {
             if (store != null) store.close();
             // Without a database every login is refused (fail closed) instead of letting banned players in.
-            getLogger().severe("Veritabanı açılamadı (" + e.getClass().getSimpleName() + "). Girişler güvenli biçimde reddedilecek. "
-                    + "Ayarları düzeltip sunucuyu yeniden başlatın.");
+            getLogger().severe("Could not open the database (" + e.getClass().getSimpleName() + "). Logins will be refused until it works. "
+                    + "Fix the settings and restart the server.");
         }
     }
 
@@ -123,11 +123,11 @@ public final class BansPlugin extends JavaPlugin {
         if (cause instanceof Problem problem) {
             tell(sender, problem.key(), problem.values());
         } else if (cause instanceof IllegalArgumentException) {
-            String fallback = settings.messages().text("texts.invalid-operation", "Geçersiz işlem");
+            String fallback = settings.messages().text("texts.invalid-operation", "Invalid operation");
             tell(sender, "error", Map.of("error", Objects.requireNonNullElse(cause.getMessage(), fallback)));
         } else {
             tell(sender, "database-error", Map.of());
-            getLogger().warning("İşlem tamamlanamadı: " + cause.getClass().getSimpleName());
+            getLogger().warning("Operation failed: " + cause.getClass().getSimpleName());
         }
     }
 
@@ -192,9 +192,9 @@ public final class BansPlugin extends JavaPlugin {
             updates.configure(settings.updates());
             Bukkit.getOnlinePlayers().forEach(Player::updateCommands);
             tell(sender, restart ? "reload-restart" : "reload", Map.of());
-            if (restart) getLogger().warning("Veritabanı, sorgulama aralığı veya preset komut adları/alias/açık durumu değişti: tam sunucu yeniden başlatması gerekli.");
+            if (restart) getLogger().warning("The database, poll interval or preset command names/aliases/enabled state changed: a full server restart is needed.");
         } catch (Exception e) {
-            error(sender, new IllegalArgumentException("Ayarlar uygulanmadı; önceki ayarlar korunuyor: " + e.getMessage()));
+            error(sender, new IllegalArgumentException("Settings were not applied; the previous settings stay active: " + e.getMessage()));
         }
     }
 

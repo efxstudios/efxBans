@@ -80,7 +80,7 @@ public final class Store implements AutoCloseable {
             s.execute((mysql ? "INSERT IGNORE" : "INSERT OR IGNORE") + " INTO efxb_meta(id,version,gate) VALUES(1," + SCHEMA_VERSION + ",0)");
             try (ResultSet r = s.executeQuery("SELECT version FROM efxb_meta WHERE id=1")) {
                 if (!r.next() || r.getInt(1) != SCHEMA_VERSION)
-                    throw new SQLException("Desteklenmeyen efxBans şeması; otomatik sürüm düşürme reddedildi.");
+                    throw new SQLException("Unsupported efxBans database schema; refusing to downgrade automatically.");
             }
             s.execute("CREATE TABLE IF NOT EXISTS efxb_profiles (uuid VARCHAR(36) PRIMARY KEY, name VARCHAR(64) NOT NULL, name_lower VARCHAR(64) NOT NULL,"
                     + " ip VARCHAR(45), seen BIGINT NOT NULL, exemptions INTEGER NOT NULL)" + engine);
@@ -258,7 +258,7 @@ public final class Store implements AutoCloseable {
                         kind.timed() ? "ACTIVE" : "EXECUTED", silent ? 1 : 0);
                 s.executeUpdate();
                 try (ResultSet r = s.getGeneratedKeys()) {
-                    if (!r.next()) throw new SQLException("Ceza ID üretilemedi.");
+                    if (!r.next()) throw new SQLException("No punishment ID was generated.");
                     id = r.getLong(1);
                 }
             }
@@ -288,7 +288,7 @@ public final class Store implements AutoCloseable {
      */
     public List<Punishment> remove(Long id, UUID uuid, String ip, Set<Kind> kinds, boolean undo, String actor, String actorName, String reason,
                                    boolean addressAccess) throws SQLException {
-        if (id == null && uuid == null && ip == null) throw new IllegalArgumentException("Hedef gerekli.");
+        if (id == null && uuid == null && ip == null) throw new IllegalArgumentException("A target is required.");
         String selector = id != null ? "id=?" : uuid != null ? "target_uuid=?" : "ip=?";
         Object value = id != null ? id : uuid != null ? uuid.toString() : ip;
         return transaction(c -> {

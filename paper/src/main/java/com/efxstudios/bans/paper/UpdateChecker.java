@@ -52,7 +52,7 @@ public final class UpdateChecker {
         active = settings;
         if (!settings.enabled()) return;
         if (repository == null || current == null) {
-            plugin.getLogger().warning("Güncelleme kontrolü kapalı: derleme bilgisinde geçerli sürüm veya GitHub deposu yok.");
+            plugin.getLogger().warning("Update checker disabled: the build has no valid version or GitHub repository.");
             return;
         }
         long period = 20L * 60 * 60 * settings.intervalHours();
@@ -87,7 +87,7 @@ public final class UpdateChecker {
             // 404: no published release yet, or the repository is private.
             if (response.statusCode() == 404) return;
             if (response.statusCode() != 200) {
-                plugin.getLogger().fine("Güncelleme kontrolü: GitHub HTTP " + response.statusCode());
+                plugin.getLogger().fine("Update check: GitHub answered HTTP " + response.statusCode());
                 return;
             }
             Optional<Release> newer = newerRelease(response.body(), current, repository);
@@ -95,14 +95,14 @@ public final class UpdateChecker {
             available = newer.orElse(null);
             if (newer.isEmpty() || (previous != null && previous.version().equals(newer.get().version()))) return;
             Release release = newer.get();
-            plugin.getLogger().warning("Yeni efxBans sürümü var: " + release.version() + " (kurulu: " + current + "). İndirme: " + release.url());
+            plugin.getLogger().warning("A new efxBans version is available: " + release.version() + " (installed: " + current + "). Download: " + release.url());
             plugin.main(() -> Bukkit.getOnlinePlayers().forEach(this::notify));
         } catch (IOException e) {
-            plugin.getLogger().info("Güncelleme kontrolü yapılamadı (" + e.getClass().getSimpleName() + "). Sonraki denemede tekrar denenecek.");
+            plugin.getLogger().info("Update check failed (" + e.getClass().getSimpleName() + "). It will be retried later.");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         } catch (RuntimeException e) {
-            plugin.getLogger().info("GitHub yanıtı okunamadı: " + e.getClass().getSimpleName());
+            plugin.getLogger().info("Could not read the GitHub response: " + e.getClass().getSimpleName());
         }
     }
 

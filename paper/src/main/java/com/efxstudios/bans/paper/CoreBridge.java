@@ -22,7 +22,7 @@ public final class CoreBridge {
 
     /** True if efxCore took the message. The caller has already cancelled the chat event either way. */
     public boolean route(Player player, String message) {
-        if (!Bukkit.isPrimaryThread()) throw new IllegalStateException("CoreBridge main thread gerektirir");
+        if (!Bukkit.isPrimaryThread()) throw new IllegalStateException("CoreBridge must run on the main thread");
         if (!plugin.settings().coreIntegration()) return false;
         Plugin core = Bukkit.getPluginManager().getPlugin("efxCore");
         if (core == null || !core.isEnabled()) return false;
@@ -46,8 +46,8 @@ public final class CoreBridge {
             if (e instanceof VirtualMachineError fatal) throw fatal;
             if (!warned) {
                 warned = true;
-                plugin.getLogger().severe("efxCore kontrol sohbeti API'si kullanılamıyor; uyumluluk için mevcut ControlManager yöntemleri gerekli. "
-                        + "Mesaj genel sohbete bırakılmadı. " + e.getClass().getSimpleName() + ": " + e.getMessage());
+                plugin.getLogger().severe("The efxCore control chat API is not available; the current ControlManager methods are required. "
+                        + "The message was not released to public chat. " + e.getClass().getSimpleName() + ": " + e.getMessage());
             }
             return false;
         }

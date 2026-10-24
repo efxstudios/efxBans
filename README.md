@@ -2,7 +2,7 @@
 
 Punishment management for Paper servers: bans, IP bans, mutes, kicks and warnings. Commands are built on Paper's Brigadier API, so there is no command library to install. If the database can't be reached, players are refused at login instead of being let in unchecked.
 
-The in-game messages ship in Turkish and every one of them can be changed in `messages.yml`.
+Messages ship in English, Turkish, German, Spanish and French, and every one of them can be edited.
 
 <p>
   <a href="https://papermc.io"><img alt="Supported on Paper" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/supported/paper_vector.svg" height="40"></a>
@@ -23,12 +23,13 @@ The in-game messages ship in Turkish and every one of them can be changed in `me
 - **Offline players.** Bans, mutes and warnings work on offline accounts. A warning is shown the next time the player joins.
 - **Several servers.** Paper servers sharing one MySQL database see each other's punishments within half a second.
 - **Safe defaults.** Permanent, silent and IP-targeted punishments each need their own permission. The console is permission-checked too. IP addresses and UUIDs are hidden in messages, and values like player names and reasons are never parsed as MiniMessage tags.
-- **Every text is configurable.** All messages live in `messages.yml` as MiniMessage, including multi-line ban screens.
+- **Five languages, every text configurable.** Pick one with `language` in `config.yml`. All messages are MiniMessage, including multi-line ban screens.
+- **Painless updates.** Config files carry a `config-version`; after an update efxBans backs them up and migrates them, keeping your values.
 
 ## Installation
 
 1. Download `efxBans-<version>.jar` from [Releases](https://github.com/efxstudios/efxBans/releases/latest) and put it in `plugins/`.
-2. Start the server. `config.yml`, `messages.yml` and the SQLite database are created in `plugins/efxBans/`.
+2. Start the server. `config.yml`, the `lang/` folder and the SQLite database are created in `plugins/efxBans/`.
 3. Grant permissions with LuckPerms or your permission plugin. Punishment commands are enabled for operators only by default.
 
 | Server | Java |
@@ -52,7 +53,7 @@ After editing the config, `/efxbans reload` is enough. Changing command names, a
 | `/unban <#ID\|player\|IP>` · `/unmute <#ID\|player>` | Remove a punishment |
 | `/undo <#ID>` | Revoke any punishment; the record is kept |
 | `/history <player> [page]` · `/punishment <#ID>` | History and details of one record |
-| `/sorgu <player\|IP\|#ID>` | Active bans, IP bans and mutes in detail |
+| `/lookup <player\|IP\|#ID>` | Active bans, IP bans and mutes in detail (alias: `/sorgu`) |
 | `/banlist` · `/mutelist` | Active punishments, with clickable pages |
 | `/alts <player>` | Accounts that used the same IP in the past |
 | `/efxbans help\|status\|reload` | Help, status, reload settings |
@@ -71,7 +72,7 @@ Duration units are `s m h d w` and can be combined: `30m`, `2h`, `7d`, `1d12h`. 
 | `efxbans.ipban.address` | Ban an IP directly instead of a player |
 | `efxbans.unban`, `efxbans.unmute`, `efxbans.undo` | Removing and revoking |
 | `efxbans.unban.address` | Unban by IP, or remove an IP ban that has no account by `#ID` |
-| `efxbans.history`, `efxbans.sorgu`, `efxbans.banlist`, `efxbans.mutelist`, `efxbans.alts` | Viewing records |
+| `efxbans.history`, `efxbans.lookup`, `efxbans.banlist`, `efxbans.mutelist`, `efxbans.alts` | Viewing records (the old `efxbans.sorgu` still grants `efxbans.lookup`) |
 | `efxbans.ip.view` | See the real IP in punishment details |
 | `efxbans.notify` | Staff announcements |
 | `efxbans.update.notify` | New version notice |
@@ -93,26 +94,51 @@ permissions:
 
 ## Presets
 
-Short commands for punishments you give often. `/hile Player` creates the same record as `/ipban Player 30d Hile Kullanımı` and goes through the same checks.
+Short commands for punishments you give often. `/cheating Player` creates the same record as `/ipban Player 30d Cheating` and goes through the same checks.
 
 ```yaml
 presets:
-  hile:
-    command: hile
-    aliases: [cheatban]
+  cheating:
+    command: cheating
+    aliases: [hacks]
     type: IPBAN        # BAN, IPBAN, MUTE, KICK, WARN
     duration: 30d      # or permanent
-    reason: Hile Kullanımı
-    permission: efxbans.preset.hile
+    reason: Cheating
+    permission: efxbans.preset.cheating
 ```
 
 Command names may use lowercase Turkish letters (`command: küfür`); the default permission is the ASCII form, `efxbans.preset.kufur`. If you want no presets at all, write `presets: {}`.
 
-## Messages
+## Languages and messages
 
-Everything in `messages.yml` is [MiniMessage](https://docs.advntr.dev/minimessage/format.html). Lists of lines or YAML `|` blocks become multi-line text. The available placeholders are listed at the top of the file: `{player}`, `{staff}`, `{reason}`, `{duration}`, `{remaining}`, `{id}` and so on.
+```yaml
+language: en          # lang/en.yml
+timezone: UTC         # for dates in messages, e.g. Europe/Istanbul
+```
 
-Message keys added in a new version are appended to your existing file; messages you changed are left alone. The first time this happens, a backup is written to `messages.before-update.yml`.
+| Code | Language |
+| --- | --- |
+| `en` | English (default) |
+| `tr` | Turkish |
+| `de` | German |
+| `es` | Spanish |
+| `fr` | French |
+
+All bundled files are copied to `plugins/efxBans/lang/` so you can edit them; `/efxbans reload` applies changes, including a new `language`. To add a translation, copy `en.yml` to a new file such as `lang/pt_br.yml` and set `language: pt_br`. Any key you leave out falls back to English, so a partial translation still works.
+
+Everything in the language files is [MiniMessage](https://docs.advntr.dev/minimessage/format.html). Lists of lines or YAML `|` blocks become multi-line text. The available placeholders are listed at the top of each file: `{player}`, `{staff}`, `{reason}`, `{duration}`, `{remaining}`, `{id}` and so on.
+
+## Updating
+
+Replace the JAR and restart. `config.yml` and the language files start with a `config-version`. When an update changes their layout, efxBans:
+
+1. copies the old file to `plugins/efxBans/backups/` (for example `config-v1-20261024-041049.yml`),
+2. moves renamed keys and applies changed defaults,
+3. adds new keys with their comments, keeping every value you set.
+
+Files from a newer efxBans are refused instead of being downgraded. Don't edit `config-version` yourself.
+
+Coming from 1.0: your `messages.yml` becomes `lang/tr.yml` with all your changes, `language` is set to `tr`, and `/teammsg` and `/tm` are added to the muted commands.
 
 ## Discord
 

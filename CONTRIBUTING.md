@@ -38,10 +38,31 @@ CI runs them on MySQL 8.0 and 8.4.
 ## Rules
 
 - **SQL:** Values are always bound as `?` parameters. Only constants from the code may be concatenated into SQL.
-- **Messages:** Text that players see belongs in `paper/src/main/resources/messages.yml`, not in code. Values such as player names and reasons are inserted through `Messages.render`, which never parses them as MiniMessage.
+- **Messages:** Text that players see belongs in the language files in `paper/src/main/resources/lang/`, not in code. Add a new key to **all five** files (`SettingsTest` fails if a language is missing a key that English has). Values such as player names and reasons are inserted through `Messages.render`, which never parses them as MiniMessage. Console logs are English and stay in code.
 - **Threads:** JDBC runs only on the `Engine` thread; the Bukkit API is called only on the main thread (`plugin.main(...)`).
 - **Permissions:** Commands check permissions again when they run. `requires` only hides a command.
 - Every change in behaviour comes with a test. Code style is in `.editorconfig`: 4-space indentation, LF line endings.
+
+## Config versions
+
+`config.yml` and every language file start with `config-version`. It is separate from the plugin version and only changes when the file's layout changes. On startup, `ConfigFile` compares the file on disk with the bundled template:
+
+- **Same version:** the file is used as it is.
+- **Older:** the file is copied to `backups/`, the migration steps run one version at a time, and the file is rebuilt from the bundled template with the user's values on top. New keys arrive with their comments.
+- **Newer:** loading fails; efxBans never downgrades a file.
+
+When you change the layout of `config.yml`:
+
+1. Raise `config-version` in `paper/src/main/resources/config.yml` and `Settings.CONFIG_VERSION`.
+2. If keys are only **added**, you're done: the rebuild adds them.
+3. If keys are **renamed, removed or need a new value**, add a step to `Settings.steps(...)`:
+   ```java
+   new ConfigFile.Step(2, "discord.url renamed to discord.webhook", c -> ConfigFile.rename(c, "discord.url", "discord.webhook"))
+   ```
+   Step `N` turns version `N` into `N + 1`. Use `ConfigFile.rename`, `ConfigFile.addToList` or plain `c.set(...)`.
+4. Add a case to `SettingsTest` that loads the old layout.
+
+Language files work the same way, with their own `config-version` and `Languages.STEPS`. Sections that belong entirely to the user, such as `presets`, are listed in `Settings.USER_OWNED`: they are copied whole and never mixed with the template's examples.
 
 ## Versions
 

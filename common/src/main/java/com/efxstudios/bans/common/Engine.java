@@ -69,7 +69,7 @@ public final class Engine implements AutoCloseable {
 
     /** Queues work on the database thread. Fails fast instead of growing without bound. */
     public <T> CompletableFuture<T> call(Operation<T> operation) {
-        if (!capacity.tryAcquire()) return CompletableFuture.failedFuture(new RejectedExecutionException("Veritabanı iş kuyruğu dolu."));
+        if (!capacity.tryAcquire()) return CompletableFuture.failedFuture(new RejectedExecutionException("Database work queue is full."));
         CompletableFuture<T> result = new CompletableFuture<>();
         try {
             worker.execute(() -> {

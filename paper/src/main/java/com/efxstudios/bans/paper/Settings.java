@@ -8,15 +8,11 @@ import com.efxstudios.bans.common.Webhook;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,7 +24,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 
-/** Validated, immutable view of config.yml and messages.yml. A reload swaps the whole object at once. */
+/** Validated, immutable view of config.yml and the selected lang/ file. A reload swaps the whole object at once. */
 public record Settings(DatabaseSettings database, long pollMillis, long staleMillis, boolean publicBroadcast,
                        long defaultMax, Map<String, Long> limits, List<String> muteCommands, Set<String> consolePermissions,
                        boolean coreIntegration, Map<String, Preset> presets, Messages messages, Webhook.Settings webhook,
@@ -40,16 +36,22 @@ public record Settings(DatabaseSettings database, long pollMillis, long staleMil
         public static final Updates DISABLED = new Updates(false, false, 12);
 
         public Updates {
-            if (intervalHours < 1 || intervalHours > 168) throw new IllegalArgumentException("update-checker.interval-hours 1–168 olmalı");
+            if (intervalHours < 1 || intervalHours > 168) throw new IllegalArgumentException("update-checker.interval-hours must be between 1 and 168");
         }
     }
 
     private static final Set<String> RESERVED = Set.of("ban", "ipban", "mute", "kick", "warn", "unban", "unmute", "history",
-            "punishment", "undo", "alts", "efxbans", "banlist", "mutelist", "sorgu");
+            "punishment", "undo", "alts", "efxbans", "banlist", "mutelist", "lookup", "sorgu");
+
+    /** config.yml layout this build writes. Raise it, and add a Step, whenever keys are added, renamed or removed. */
+    static final int CONFIG_VERSION = 2;
+
+    /** Sections that belong to the user: the packaged examples are never merged into them. */
+    private static final Set<String> USER_OWNED = Set.of("presets");
 
     public static Settings load(BansPlugin plugin) throws Exception {
-        YamlConfiguration c = read(plugin, "config.yml");
-        YamlConfiguration m = read(plugin, "messages.yml");
+        YamlConfiguration c = config(plugin);
+        Map<String, String> texts = Languages.load(plugin, c.getString("language", Languages.DEFAULT));
 
         DatabaseSettings db = new DatabaseSettings(
                 c.getString("database.type", "sqlite"),
@@ -64,7 +66,7 @@ public record Settings(DatabaseSettings database, long pollMillis, long staleMil
 
         long poll = c.getLong("network.poll-millis", 500);
         long stale = c.getLong("network.fail-closed-after-millis", 15000);
-        if (poll < 100 || poll > 60000 || stale < poll * 2 || stale > 300000) throw new IllegalArgumentException("network süreleri geçersiz");
+        if (poll < 100 || poll > 60000 || stale < poll * 2 || stale > 300000) throw new IllegalArgumentException("Invalid network timings");
 
         Map<String, Long> limits = new HashMap<>();
         for (Map<?, ?> row : c.getMapList("permissions.duration-limits")) {
@@ -73,7 +75,7 @@ public record Settings(DatabaseSettings database, long pollMillis, long staleMil
             limits.put(permission, Times.parse(Objects.toString(row.get("maximum"), "")));
         }
 
-        Messages messages = new Messages(m.getString("prefix", ""), texts(m), m.getString("timezone", "Europe/Istanbul"));
+        Messages messages = new Messages(texts.getOrDefault("prefix", ""), texts, c.getString("timezone", "UTC"));
 
         Webhook.Settings webhook = new Webhook.Settings(
                 c.getBoolean("discord.enabled", false),
@@ -81,7 +83,7 @@ public record Settings(DatabaseSettings database, long pollMillis, long staleMil
                 Set.copyOf(c.getStringList("discord.actions")),
                 c.getBoolean("discord.include-ip", false),
                 c.getString("discord.title", "efxBans"),
-                c.getString("discord.footer", "efxStudios • Ceza kaydı"));
+                c.getString("discord.footer", "efxBans • Punishment log"));
 
         Updates updates = new Updates(
                 c.getBoolean("update-checker.enabled", true),
@@ -115,14 +117,14 @@ public record Settings(DatabaseSettings database, long pollMillis, long staleMil
             aliases.forEach(Settings::validateLabel);
             List<String> labels = new ArrayList<>(aliases);
             labels.add(command);
-            for (String label : labels) if (!claimed.add(label)) throw new IllegalArgumentException("Tekrarlanan/ayrılmış komut adı: " + label);
+            for (String label : labels) if (!claimed.add(label)) throw new IllegalArgumentException("Duplicate or reserved command name: " + label);
 
             Kind kind = Kind.valueOf(c.getString(path + "type", "WARN").toUpperCase(Locale.ROOT));
             String time = c.getString(path + "duration", "permanent");
             long duration = time.equalsIgnoreCase("permanent") ? 0 : Times.parse(time);
-            if (!kind.timed() && duration != 0) throw new IllegalArgumentException(command + ": kick/warn süre alamaz");
+            if (!kind.timed() && duration != 0) throw new IllegalArgumentException(command + ": kick and warn take no duration");
             String reason = c.getString(path + "reason", "");
-            if (reason.isBlank() || reason.length() > 1000) throw new IllegalArgumentException(command + ": sebep 1–1000 karakter olmalı");
+            if (reason.isBlank() || reason.length() > 1000) throw new IllegalArgumentException(command + ": the reason must be 1–1000 characters");
             String permission = c.getString(path + "permission", "efxbans.preset." + asciiLabel(command));
             validatePermission(permission);
             presets.put(command, new Preset(command, List.copyOf(aliases), kind, duration, reason, permission, c.getBoolean(path + "enabled", true)));
@@ -130,19 +132,8 @@ public record Settings(DatabaseSettings database, long pollMillis, long staleMil
         return presets;
     }
 
-    /** Every string (or list of lines) in messages.yml, keyed by its dotted path. */
-    private static Map<String, String> texts(YamlConfiguration m) {
-        Map<String, String> texts = new HashMap<>();
-        for (String key : m.getKeys(true)) {
-            Object value = m.get(key);
-            if (value instanceof List<?> list) texts.put(key, String.join("\n", list.stream().map(Object::toString).toList()));
-            else if (value instanceof String text) texts.put(key, text);
-        }
-        return texts;
-    }
-
     private static void validateLabel(String label) {
-        if (!label.matches("[a-zçğıöşü][a-z0-9çğıöşü_-]{0,31}")) throw new IllegalArgumentException("Geçersiz komut adı (küçük harf kullanın): " + label);
+        if (!label.matches("[a-zçğıöşü][a-z0-9çğıöşü_-]{0,31}")) throw new IllegalArgumentException("Invalid command name (use lowercase): " + label);
     }
 
     private static String asciiLabel(String label) {
@@ -150,59 +141,41 @@ public record Settings(DatabaseSettings database, long pollMillis, long staleMil
     }
 
     private static void validatePermission(String permission) {
-        if (!permission.matches("[a-z0-9_.-]+")) throw new IllegalArgumentException("Geçersiz yetki: " + permission);
+        if (!permission.matches("[a-z0-9_.-]+")) throw new IllegalArgumentException("Invalid permission: " + permission);
+    }
+
+    /** Loads config.yml, creating it on first start and migrating it from older layouts. */
+    private static YamlConfiguration config(BansPlugin plugin) throws Exception {
+        Path data = plugin.getDataFolder().toPath();
+        Files.createDirectories(data);
+        Path file = data.resolve("config.yml");
+        InputStream bundled = plugin.getResource("config.yml");
+        if (bundled == null) throw new IOException("Bundled resource missing: config.yml");
+        String template = ConfigFile.read(bundled);
+        if (!Files.exists(file)) Files.writeString(file, template, StandardCharsets.UTF_8);
+        // A config.yml without config-version is the efxBans 1.0 layout.
+        return ConfigFile.load(file, template, 1, steps(data), USER_OWNED, data.resolve("backups"), plugin.getLogger());
     }
 
     /**
-     * Loads a file from the data folder, creating it from the JAR on first start.
-     * messages.yml additionally receives new keys and updated untouched defaults, with a one-time backup.
+     * config.yml migrations. Each step upgrades version N to N + 1; keys that are only new need no step,
+     * because the rebuilt file takes them (with their comments) from the bundled config.yml.
      */
-    private static YamlConfiguration read(BansPlugin plugin, String file) throws Exception {
-        File target = new File(plugin.getDataFolder(), file);
-        if (!target.exists()) plugin.saveResource(file, false);
-        YamlConfiguration config = new YamlConfiguration();
-        config.load(target);
-        try (InputStream stream = plugin.getResource(file)) {
-            if (stream == null) throw new IOException("Paket kaynağı eksik: " + file);
-            YamlConfiguration defaults = YamlConfiguration.loadConfiguration(new InputStreamReader(stream, StandardCharsets.UTF_8));
-            if (file.equals("messages.yml")) updateMessages(plugin, target.toPath(), config, defaults);
-            else config.setDefaults(defaults);
-        }
-        return config;
+    static List<ConfigFile.Step> steps(Path data) {
+        return List.of(
+                new ConfigFile.Step(1, "language and timezone settings added; /teammsg and /tm are blocked while muted", c -> {
+                    ConfigFile.addToList(c, "mute.blocked-commands", "teammsg", "tm");
+                    // 1.0 had only Turkish messages, so existing servers keep Turkish.
+                    if (!c.isSet("language")) c.set("language", "tr");
+                    if (!c.isSet("timezone")) c.set("timezone", legacyTimezone(data));
+                }));
     }
 
-    private static void updateMessages(BansPlugin plugin, Path target, YamlConfiguration config, YamlConfiguration defaults) throws IOException {
-        boolean updated = false;
-        for (String key : defaults.getKeys(true)) if (!defaults.isConfigurationSection(key) && !config.isSet(key)) updated = true;
-        // A value still equal to the first release's default was never customized: upgrade it to the new default.
-        try (InputStream legacy = plugin.getResource("messages-v1.yml")) {
-            if (legacy != null) {
-                YamlConfiguration old = YamlConfiguration.loadConfiguration(new InputStreamReader(legacy, StandardCharsets.UTF_8));
-                for (String key : old.getKeys(true)) {
-                    if (old.isConfigurationSection(key) || !config.isSet(key) || !defaults.contains(key)) continue;
-                    if (Objects.equals(config.get(key), old.get(key)) && !Objects.equals(config.get(key), defaults.get(key))) {
-                        config.set(key, defaults.get(key));
-                        updated = true;
-                    }
-                }
-            }
-        }
-        config.setDefaults(defaults);
-        config.options().copyDefaults(true);
-        if (!updated) return;
-        Path backup = target.resolveSibling("messages.before-update.yml");
-        if (!Files.exists(backup)) Files.copy(target, backup);
-        Path temporary = Files.createTempFile(target.getParent(), "messages-", ".tmp");
-        try {
-            config.save(temporary.toFile());
-            try {
-                Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-            } catch (AtomicMoveNotSupportedException e) {
-                Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING);
-            }
-        } finally {
-            Files.deleteIfExists(temporary);
-        }
+    /** The timezone used to live in messages.yml. */
+    private static String legacyTimezone(Path data) {
+        Path messages = data.resolve("messages.yml");
+        if (!Files.exists(messages)) return "Europe/Istanbul";
+        return YamlConfiguration.loadConfiguration(messages.toFile()).getString("timezone", "Europe/Istanbul");
     }
 
     /** Enabled preset commands and aliases; a change here needs a restart (Brigadier trees are built once). */

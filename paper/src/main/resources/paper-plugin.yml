@@ -3,7 +3,7 @@ version: '${project.version}'
 main: com.efxstudios.bans.paper.BansPlugin
 api-version: '1.21.11'
 authors: [efx1st]
-description: Modern ceza yönetimi — efxStudios
+description: Punishment management for Paper servers
 website: https://efxstudios.com
 dependencies:
   server:
@@ -16,7 +16,12 @@ dependencies:
       required: false
       join-classpath: true
 permissions:
-  efxbans.sorgu: {default: op}
+  efxbans.lookup: {default: op}
+  # Old name of efxbans.lookup; still grants it so existing permission setups keep working.
+  efxbans.sorgu:
+    default: op
+    children:
+      efxbans.lookup: true
   efxbans.banlist: {default: op}
   efxbans.mutelist: {default: op}
   efxbans.ban: {default: op}
