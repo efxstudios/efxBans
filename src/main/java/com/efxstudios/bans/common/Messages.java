@@ -13,14 +13,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * Renders language-file templates. Values are always inserted as unparsed placeholders, so player names
- * and reasons can never become MiniMessage tags, click events or other placeholders.
- */
 public final class Messages {
     private static final MiniMessage MM = MiniMessage.miniMessage();
     private static final String UUID_PATTERN = "(?i)[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
-    /** Punishment IDs are only shown in record views and ban screens, never in announcements. */
+
     private static final Set<String> ID_VISIBLE = Set.of("screen.ban", "screen.ipban", "history-entry", "detail", "audit-entry", "inquiry.entry");
 
     private final Map<String, String> templates;
@@ -36,7 +32,7 @@ public final class Messages {
         this.prefix = MM.deserialize(prefix);
         this.zone = ZoneId.of(zone);
         this.dates = DateTimeFormatter.ofPattern(text("date-format", "yyyy-MM-dd HH:mm:ss")).withZone(this.zone);
-        // Fail on load, not on first use, if a template is malformed.
+
         templates.values().forEach(MM::deserialize);
         Times.Units d = Times.Units.DEFAULT;
         this.units = new Times.Units(label("week", d.week()), label("day", d.day()), label("hour", d.hour()),
@@ -45,7 +41,6 @@ public final class Messages {
         this.none = text("none", "—");
     }
 
-    /** time-units.hour (singular) and time-units.hours (plural). */
     private Times.Label label(String unit, Times.Label fallback) {
         return new Times.Label(text("time-units." + unit, fallback.one()), text("time-units." + unit + "s", fallback.many()));
     }
@@ -54,7 +49,6 @@ public final class Messages {
         return render(key, values, Map.of());
     }
 
-    /** Trusted component placeholders, for interactive names; string values remain unparsed. */
     public Component render(String key, Map<String, String> values, Map<String, Component> components) {
         String template = templates.getOrDefault(key, "{prefix} <#FF5656>Missing message: " + key);
         template = template.replace("{uuid}", "");
@@ -74,7 +68,6 @@ public final class Messages {
         return MM.deserialize(template, tags.build());
     }
 
-    /** Raw text of a key, for values that are inserted into other templates (usage lines, labels...). */
     public String text(String key, String fallback) {
         return templates.getOrDefault(key, fallback);
     }
@@ -91,7 +84,6 @@ public final class Messages {
         return value.replaceAll(UUID_PATTERN, java.util.regex.Matcher.quoteReplacement(replacement));
     }
 
-    /** Standard placeholder values of a punishment. The IP is never part of them. */
     public Map<String, String> values(Punishment p) {
         long now = System.currentTimeMillis();
         String permanent = text("permanent", "Permanent");

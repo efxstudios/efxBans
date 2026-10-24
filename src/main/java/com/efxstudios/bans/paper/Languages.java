@@ -16,27 +16,18 @@ import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-/**
- * Message files in {@code plugins/efxBans/lang/<code>.yml}, selected with {@code language} in config.yml.
- *
- * <p>The bundled languages are copied into lang/ on first start so they can be edited. Any other file,
- * e.g. lang/pt_br.yml, can be added by hand. A key missing from the selected file falls back to the
- * bundled file of that language, then to English, so an incomplete translation never shows an error.
- */
 final class Languages {
     static final List<String> BUNDLED = List.of("en", "tr", "de", "es", "fr");
     static final String DEFAULT = "en";
-    /** Also keeps the value usable as a file name: no path separators, no "..". */
+
     private static final Pattern CODE = Pattern.compile("[a-z]{2,3}(?:_[a-z0-9]{2,8})?");
 
-    /** Language-file migrations: config-version N to N + 1. Version 1 is the first lang/ layout. */
     static final List<ConfigFile.Step> STEPS = List.of(new ConfigFile.Step(1, "status colors and ban links in /alts", c -> {
         if ("<#FF5656>{player}".equals(c.getString("alts-entry"))) c.set("alts-entry", "{player}");
     }));
 
     private Languages() {}
 
-    /** All message texts of a language, keyed by their dotted path. */
     static Map<String, String> load(BansPlugin plugin, String language) throws Exception {
         String code = language.strip().toLowerCase(Locale.ROOT).replace('-', '_');
         if (!CODE.matcher(code).matches()) throw new IllegalArgumentException("Invalid language '" + language + "'. Use a file name from lang/, for example en.");
@@ -64,10 +55,6 @@ final class Languages {
         return texts;
     }
 
-    /**
-     * efxBans 1.0 kept Turkish messages in plugins/efxBans/messages.yml. They become lang/tr.yml with all
-     * customizations; config migration sets language: tr for those servers. The old file goes to backups/.
-     */
     private static void migrateLegacyMessages(BansPlugin plugin, Path data, Path folder, Path backups, Logger logger) throws Exception {
         Path legacy = data.resolve("messages.yml");
         if (!Files.exists(legacy)) return;
@@ -77,7 +64,7 @@ final class Languages {
             old.load(legacy.toFile());
             String template = bundled(plugin, "tr");
             upgradeUntouchedDefaults(plugin, old, ConfigFile.parse(template));
-            old.set("timezone", null); // Now config.yml timezone.
+            old.set("timezone", null);
             YamlConfiguration rebuilt = ConfigFile.rebuild(old, template, Set.of());
             rebuilt.set(ConfigFile.VERSION_KEY, ConfigFile.parse(template).getInt(ConfigFile.VERSION_KEY));
             ConfigFile.save(rebuilt, target);
@@ -88,7 +75,6 @@ final class Languages {
         logger.info("The old messages.yml is kept as backups/" + backup.getFileName() + ".");
     }
 
-    /** A value still equal to the very first release's default was never customized: use the current default. */
     private static void upgradeUntouchedDefaults(BansPlugin plugin, YamlConfiguration config, YamlConfiguration defaults) throws Exception {
         InputStream stream = plugin.getResource("messages-v1.yml");
         if (stream == null) return;
@@ -105,7 +91,6 @@ final class Languages {
         return ConfigFile.read(stream);
     }
 
-    /** Every string (or list of lines, joined with newlines) keyed by its dotted path. */
     static Map<String, String> texts(YamlConfiguration yaml) {
         Map<String, String> texts = new HashMap<>();
         for (String key : yaml.getKeys(true)) {

@@ -11,7 +11,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-/** Parsing and rendering of untrusted input: durations, addresses, message values. */
 class InputTest {
     private static final PlainTextComponentSerializer PLAIN = PlainTextComponentSerializer.plainText();
 

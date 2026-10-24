@@ -15,7 +15,6 @@ class ActiveCacheTest {
         return new Punishment(id, kind, target, "Player" + id, ip, "CONSOLE", "Console", "Test", 0, 0, "ACTIVE", 0, null, null, null, false);
     }
 
-    /** Large ban list: lookups stay index-based (this is a smoke test, not a benchmark). */
     @Test
     void largeSnapshotLookupsAreCorrectAndFast() {
         List<Punishment> rows = new ArrayList<>();
@@ -36,15 +35,14 @@ class ActiveCacheTest {
         }
         long millis = (System.nanoTime() - start) / 1_000_000;
         assertTrue(millis < 5_000, "100k lookups took " + millis + " ms");
-        // IP bans also match other accounts on the same address.
+
         assertEquals(3, cache.find(UUID.randomUUID(), "10.0.0.2", Set.of(Kind.IPBAN)).orElseThrow().id());
         assertTrue(cache.find(UUID.randomUUID(), "10.0.0.1", Set.of(Kind.BAN, Kind.IPBAN)).isEmpty());
 
-        // Tab completion for /unban and /unmute: names from memory, per kind.
         start = System.nanoTime();
         var banned = cache.names(Set.of(Kind.BAN, Kind.IPBAN));
         assertTrue((System.nanoTime() - start) / 1_000_000 < 1_000);
-        assertEquals(66_666, banned.size()); // Every i % 3 != 0 of 100 000 is a ban or IP ban.
+        assertEquals(66_666, banned.size());
         assertTrue(banned.contains("Player2") && banned.contains("Player3") && !banned.contains("Player1"));
         assertTrue(cache.names(Set.of(Kind.MUTE)).contains("Player1"));
     }

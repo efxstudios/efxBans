@@ -5,11 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 
 ### Added
+
+- Paper 1.16.5–26.3 compatibility in one Java 16 bytecode JAR, with legacy commands and scheduling, isolated modern adapters, and private Adventure/Gson libraries.
 - Discord embeds now show player heads, localized action titles, action colors, expiry and the punishment ID; reasons occupy a full-width field. Heads are automatic for player targets and are omitted for address-only bans.
 - Folia support: player actions and command callbacks follow their owning regions; background work uses the async scheduler.
 - `/alts` shows banned accounts in red with permission-checked ban lookup links, online accounts in light green and offline accounts in light gray.
 - `/efxbans import <vanilla|litebans|advancedban> [confirm]`: imports bans, IP bans, mutes, warnings and kicks from the vanilla ban lists, LiteBans (MySQL/MariaDB) and AdvancedBan (local storage or MySQL). It previews first, keeps dates, reasons, staff names and lifted/expired state, and can be run again safely: already imported records are skipped. Permission `efxbans.import`.
-- Support for Paper 1.20.6 through 1.21.10 in addition to 1.21.11 and 26.x. The plugin is now compiled against the 1.20.6 API.
 - Languages: English, Turkish, German, Spanish and French in `plugins/efxBans/lang/<code>.yml`, selected with `language` in `config.yml`. Custom files such as `lang/pt_br.yml` work too; missing keys fall back to English.
 - Config versioning: `config.yml` and the language files start with `config-version`. After an update, outdated files are backed up to `backups/`, migrated (renamed keys, changed defaults) and completed with new keys and their comments, keeping existing values. Files from a newer version are refused.
 - `timezone` and `date-format` settings for dates in messages.
@@ -19,6 +20,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Usage lines, duration units (singular and plural), Discord field titles and the remaining hard-coded texts moved to the language files.
 
 ### Changed
+
+- Removed code, script and language-file comments; kept configuration comments and only the preset permission summary above presets. Plugin version stays 1.0.0 and config-version is unchanged.
 - Update checks and download notices now use the Modrinth project page; only published stable versions compatible with the running Minecraft version and Paper/Folia loader are suggested.
 - efxCore control chat compatibility is maintained only on the `restamc` branch; the main plugin enforces mutes without an efxCore dependency or integration setting.
 - Standard single-module Maven layout (`src/main`, `src/test`, `target`); development instructions are consolidated in README and the security policy lives in `.github`.

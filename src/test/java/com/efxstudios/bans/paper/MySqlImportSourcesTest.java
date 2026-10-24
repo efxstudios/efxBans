@@ -7,10 +7,6 @@ import java.sql.DriverManager;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * The readers against real MySQL column types. AdvancedBan's DDL is copied from its SQLQuery class: its
- * start/end columns are LONG, which MySQL treats as text. Runs only when EFXBANS_MYSQL_HOST is set.
- */
 @EnabledIfEnvironmentVariable(named = "EFXBANS_MYSQL_HOST", matches = ".+")
 class MySqlImportSourcesTest extends ImportSourcesContract {
     private static String env(String name, String fallback) {

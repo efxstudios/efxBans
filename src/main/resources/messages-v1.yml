@@ -1,11 +1,5 @@
-# Bütün mesajlar MiniMessage. Liste veya YAML | ile çok satır kullanabilirsiniz.
-# Güvenli alanlar: {prefix} {player} {staff} {reason} {duration} {remaining} {id}
-# {type} {created} {expires} {status} {closed_at} {closed_by} {close_reason}
-# Duyurularda ek alan: {change_reason}. IP varsayılan mesajlarda gösterilmez.
 prefix: '<b><gradient:#FF5656:#FFB8B8><shadow:#000000:1>ᴇꜰxʙᴀɴꜱ</shadow></gradient></b> <gray>»'
 timezone: Europe/Istanbul
-
-# Önceki sorgu varsayılanları: özelleştirilmemiş şablonları güncellemek içindir.
 inquiry:
   header: '{prefix} <#F2F4FF>Ceza sorgusu: <#FF5656>{target} <#009DFF>• {total} kayıt'
   empty: '<#F2F4FF>Bu hedef için ban veya susturma kaydı bulunmuyor.'

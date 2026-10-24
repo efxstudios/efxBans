@@ -1,6 +1,4 @@
 name: Release
-
-# Pushing a tag like v1.2.3 (created by scripts/release.ps1) builds the JAR and publishes a GitHub release.
 on:
   push:
     tags: ['v[0-9]+.[0-9]+.[0-9]+*']

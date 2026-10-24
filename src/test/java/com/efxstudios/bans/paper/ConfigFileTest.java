@@ -44,7 +44,7 @@ class ConfigFileTest {
     void stepsRunInOrderAndTheTemplateSuppliesNewKeysWithComments() throws Exception {
         Path file = file("config-version: 1\nwelcome: Hi there\nlimits:\n  per-day: 9\nobsolete: x\n");
         List<ConfigFile.Step> steps = List.of(
-                // Deliberately out of order: steps are applied by version, not list position.
+
                 new ConfigFile.Step(2, "rename limits.per-day", c -> ConfigFile.rename(c, "limits.per-day", "limits.daily")),
                 new ConfigFile.Step(1, "rename welcome", c -> {
                     ConfigFile.rename(c, "welcome", "greeting");

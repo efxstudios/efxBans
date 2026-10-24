@@ -51,7 +51,6 @@ class CommandPriorityTest {
             when(settings.presets()).thenReturn(Map.of("küfür",
                     new Settings.Preset("küfür", List.of("kufur"), Kind.MUTE, 1000, "Sebep", "efxbans.preset.kufur", true)));
 
-            // Another plugin already owns these roots, with its own child nodes.
             var dispatcher = new CommandDispatcher<CommandSourceStack>();
             for (String name : COLLIDING)
                 dispatcher.register(Commands.literal(name).executes(c -> 99).then(Commands.literal("foreign").executes(c -> 99)));
@@ -65,7 +64,7 @@ class CommandPriorityTest {
                 return Set.of(node.getLiteral());
             }).when(registrar).register(any(LiteralCommandNode.class), eq("efxBans"), eq(List.of()));
 
-            new CommandTree(plugin).register(registrar);
+            new CommandTree<>(plugin, CommandSourceStack::getSender).register(new ModernCommands(registrar));
 
             for (String name : COLLIDING) {
                 var node = registered.get(name);

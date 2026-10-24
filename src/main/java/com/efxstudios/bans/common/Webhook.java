@@ -15,19 +15,17 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-/** Discord notifications. Delivery is best effort: a failure never undoes the punishment. */
 public final class Webhook implements AutoCloseable {
     private static final int ATTEMPTS = 3;
 
     public record Settings(boolean enabled, String url, Set<String> actions, boolean includeIp, String title, String footer) {
         public Settings {
             actions = Set.copyOf(actions);
-            // Only Discord webhook endpoints: a config value can't turn this into a request to an arbitrary host.
+
             if (enabled && !url.matches("https://(?:(?:canary|ptb)\\.)?discord(?:app)?\\.com/api/webhooks/[0-9]+/[A-Za-z0-9_-]+"))
                 throw new IllegalArgumentException("Invalid Discord webhook URL.");
         }
 
-        /** The URL contains the webhook token. */
         @Override
         public String toString() {
             return "Webhook.Settings[enabled=" + enabled + ", actions=" + actions + "]";
@@ -62,7 +60,6 @@ public final class Webhook implements AutoCloseable {
         }
     }
 
-    /** Pure payload builder, also used to preview notifications without sending anything to Discord. */
     static String payload(Settings settings, Messages messages, String action, Punishment p, String staff, String changeReason, Instant now) {
         String event = action.equals("remove") ? (p.kind() == Kind.MUTE ? "unmute" : "unban") : action;
         String label = messages.text("webhook.actions." + event, event);
@@ -110,8 +107,8 @@ public final class Webhook implements AutoCloseable {
     }
 
     private static String headIdentifier(Punishment p) {
-        if (p.target() == null) return null; // Address-only bans have no player head.
-        // Offline-mode UUIDs do not identify Mojang skins; use a validated account name in that case.
+        if (p.target() == null) return null;
+
         if (p.target().version() == 3 && p.name().matches("[A-Za-z0-9_]{1,16}")) return p.name();
         return p.target().toString();
     }
@@ -133,7 +130,6 @@ public final class Webhook implements AutoCloseable {
         return value.substring(0, end);
     }
 
-    /** Retries server errors and rate limits up to three times; other 4xx answers are final. */
     boolean deliver(URI url, String json) {
         for (int attempt = 0; attempt < ATTEMPTS; attempt++) {
             try {
@@ -164,7 +160,6 @@ public final class Webhook implements AutoCloseable {
         return false;
     }
 
-    /** Discord sends Retry-After in seconds (possibly fractional). */
     private long retryAfter(String header, long fallback) {
         try {
             return Math.min(15000, Math.max(minimumRetryMillis, (long) (Double.parseDouble(header) * 1000)));
@@ -177,12 +172,10 @@ public final class Webhook implements AutoCloseable {
         return "{\"name\":" + quote(limit(name, 80)) + ",\"value\":" + quote(limit(value, inline ? 256 : 1000)) + ",\"inline\":" + inline + "}";
     }
 
-    /** JSON string literal; UUIDs are masked like in chat messages. */
     static String quote(String value) {
         return jsonString(Messages.hideUuid(value));
     }
 
-    /** Controlled image URLs must retain their UUID; display text still goes through quote(). */
     private static String jsonString(String value) {
         StringBuilder b = new StringBuilder("\"");
         for (char c : value.toCharArray()) {
@@ -204,6 +197,11 @@ public final class Webhook implements AutoCloseable {
     @Override
     public void close() {
         queue.shutdownNow();
-        http.close();
+        if (http instanceof AutoCloseable closeable) {
+            try {
+                closeable.close();
+            } catch (Exception ignored) {
+            }
+        }
     }
 }

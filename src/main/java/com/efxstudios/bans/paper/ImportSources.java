@@ -26,18 +26,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * Turns other plugins' data into {@link ImportRecord}s. Only reads; the source is never changed.
- *
- * <p>Schemas: vanilla banned-players.json / banned-ips.json; AdvancedBan from its SQLQuery class
- * (Punishments = active, PunishmentHistory = everything); LiteBans from its official web interface,
- * litebans-php (prefix + bans, mutes, warnings, kicks, history).
- */
 final class ImportSources {
-    /**
-     * Texts used when the source has no value, and how to find the UUID of a name: AdvancedBan stores the
-     * lowercase name instead of a UUID when its UUID lookup is unavailable (offline-mode servers, for example).
-     */
+
     record Defaults(String noReason, String ipTarget, String console, java.util.function.Function<String, UUID> resolveName, List<String> skipped) {
         Defaults(String noReason, String ipTarget, String console, java.util.function.Function<String, UUID> resolveName) {
             this(noReason, ipTarget, console, resolveName, new ArrayList<>());
@@ -52,9 +42,6 @@ final class ImportSources {
 
     private ImportSources() {}
 
-    // ---------------------------------------------------------------- vanilla
-
-    /** banned-players.json and banned-ips.json. Vanilla only lists bans that are in effect. */
     static List<ImportRecord> vanilla(String bannedPlayers, String bannedIps, Defaults defaults) {
         List<ImportRecord> records = new ArrayList<>();
         for (JsonObject entry : objects(bannedPlayers)) {
@@ -102,10 +89,8 @@ final class ImportSources {
         return text == null || text.equalsIgnoreCase("forever") ? 0 : vanillaDate(text, 0);
     }
 
-    // ---------------------------------------------------------------- AdvancedBan
-
     static List<ImportRecord> advancedBan(Connection c, long now, Defaults defaults) throws SQLException {
-        // AdvancedBan identifies an active punishment by uuid + start + type (see its SELECT_EXACT_PUNISHMENT).
+
         Map<String, Long> active = new HashMap<>();
         try (Statement s = c.createStatement(); ResultSet r = s.executeQuery("SELECT * FROM Punishments")) {
             while (r.next()) active.put(r.getString("uuid") + "|" + r.getLong("start") + "|" + r.getString("punishmentType"), r.getLong("id"));
@@ -119,7 +104,7 @@ final class ImportSources {
                 advancedBanRow(r, "history:" + r.getLong("id"), active.containsKey(key), now, defaults, records);
             }
         }
-        // Active punishments whose history row was deleted.
+
         try (Statement s = c.createStatement(); ResultSet r = s.executeQuery("SELECT * FROM Punishments")) {
             while (r.next()) {
                 String key = r.getString("uuid") + "|" + r.getLong("start") + "|" + r.getString("punishmentType");
@@ -137,7 +122,7 @@ final class ImportSources {
             case "MUTE", "TEMP_MUTE" -> Kind.MUTE;
             case "WARNING", "TEMP_WARNING" -> Kind.WARN;
             case "KICK" -> Kind.KICK;
-            default -> null; // NOTE: no counterpart in efxBans.
+            default -> null;
         };
         if (kind == null) return;
         String id = r.getString("uuid");
@@ -154,14 +139,12 @@ final class ImportSources {
         long expires = !kind.timed() || end <= 0 ? 0 : end;
         String state;
         if (!kind.timed()) state = "EXECUTED";
-        else if (isActive || (expires > 0 && expires <= now)) state = "ACTIVE"; // Expired ones show as expired.
-        else state = "REMOVED"; // Gone from Punishments before its end: it was lifted.
+        else if (isActive || (expires > 0 && expires <= now)) state = "ACTIVE";
+        else state = "REMOVED";
         String name = Objects.requireNonNullElse(r.getString("name"), target != null ? target.toString() : defaults.ipTarget());
         out.add(new ImportRecord(sourceId, kind, target, name, ip, actor(r.getString("operator"), defaults), reason(r.getString("reason"), defaults),
                 start, expires, state, 0, null, false));
     }
-
-    // ---------------------------------------------------------------- LiteBans
 
     static List<ImportRecord> liteBans(Connection c, String prefix, long now, Defaults defaults) throws SQLException {
         if (!prefix.matches("[A-Za-z0-9_]*")) throw new IllegalArgumentException("Invalid LiteBans table_prefix: " + prefix);
@@ -184,7 +167,7 @@ final class ImportSources {
         boolean ipBan = columns.contains("ipban") && r.getBoolean("ipban");
         Kind kind = switch (table) {
             case "bans" -> ipBan ? Kind.IPBAN : Kind.BAN;
-            case "mutes" -> Kind.MUTE; // efxBans has no IP mute: an IP mute becomes a mute of its account.
+            case "mutes" -> Kind.MUTE;
             case "warnings" -> Kind.WARN;
             default -> Kind.KICK;
         };
@@ -195,7 +178,7 @@ final class ImportSources {
             defaults.skipped().add(table + ":" + r.getLong("id") + " (" + rawUuid + ")");
             return;
         }
-        if (kind == Kind.IPBAN && ip == null) kind = Kind.BAN; // No address recorded: keep it as an account ban.
+        if (kind == Kind.IPBAN && ip == null) kind = Kind.BAN;
         long time = r.getLong("time");
         long until = columns.contains("until") ? r.getLong("until") : 0;
         long expires = !kind.timed() || until <= 0 ? 0 : until;
@@ -229,9 +212,6 @@ final class ImportSources {
         return columns;
     }
 
-    // ---------------------------------------------------------------- shared
-
-    /** Dashed or undashed UUID; anything else (an IP, "#offline#"...) is not an account. */
     static UUID uuid(String text) {
         if (text == null) return null;
         String value = text.strip();

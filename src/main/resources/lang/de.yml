@@ -1,12 +1,5 @@
-# config-version nicht ändern; efxBans aktualisiert diese Datei damit nach einem Update.
 config-version: 3
-
-# Alle Nachrichten sind MiniMessage. Für mehrere Zeilen eine Liste oder einen YAML-|-Block verwenden.
-# Platzhalter: {prefix} {player} {staff} {reason} {duration} {remaining} {id}
-# {type} {created} {expires} {status} {closed_at} {closed_by} {close_reason}
-# Ankündigungen haben zusätzlich {change_reason}. Die IP steht in keiner Standardnachricht.
 prefix: '<b><gradient:#FF5656:#FFB8B8>ᴇꜰxʙᴀɴꜱ</gradient></b> <gray>»'
-# Java-DateTimeFormatter-Muster. Die Zeitzone wird in der config.yml festgelegt.
 date-format: 'dd.MM.yyyy HH:mm:ss'
 permanent: Dauerhaft
 types:
@@ -48,7 +41,6 @@ unavailable: '{prefix} <#F2F4FF>Das Strafsystem kann gerade nichts überprüfen.
 unknown-player: '{prefix} <#FF5656>{player} <#F2F4FF>konnte nicht überprüft werden. Verwende den Namen eines bekannten Spielers.'
 usage: '{prefix} <#F2F4FF>Verwendung: <#009DFF>{usage}'
 not-found: '{prefix} <#F2F4FF>Keine <#009DFF>passenden Einträge <#F2F4FF>gefunden.'
-# Bestätigungen gehen nur an das Teammitglied bzw. die Konsole, die den Befehl ausgeführt hat.
 confirmation:
   ban: '{prefix} <#55FF55>{player} wurde gebannt.'
   ipban: '{prefix} <#55FF55>{player} wurde per IP gebannt.'
@@ -79,7 +71,6 @@ detail:
 audit-entry: '<gray>{created} <#009DFF>{action} <#F2F4FF>• {staff} • {reason}'
 ip-detail: '{prefix} <#F2F4FF>Vertrauliche IP-Information: <#009DFF>{ip}'
 alts-header: '{prefix} <#F2F4FF>Accounts, die früher eine IP mit <#FF5656>{player} <#F2F4FF>geteilt haben. <#009DFF>Das beweist nicht, dass es dieselbe Person ist.'
-# Player names are colored by ban and online status; banned names link to /lookup.
 alts-entry: '{player}'
 
 broadcast:
@@ -140,12 +131,8 @@ screen:
     - '<#FF5656>Du wurdest vom Server gekickt.'
     - '<#F2F4FF>Teammitglied: <#009DFF>{staff}'
     - '<#F2F4FF>Grund: <#009DFF>{reason}'
-
-# Ein Klick öffnet die GitHub-Release-Seite. Platzhalter: {current} {latest}
 update:
   available: '{prefix} <#F2F4FF>Neue efxBans-Version verfügbar: <#009DFF>{latest} <#F2F4FF>(installiert: {current}). <#009DFF><u>Zum Herunterladen klicken</u>'
-
-# Die folgenden Einträge sind reiner Text und werden unverändert in andere Nachrichten eingesetzt.
 usages:
   ban: '/ban [-s] <Spieler> [Dauer] <Grund>'
   ipban: '/ipban [-s] <Spieler|IP> [Dauer] <Grund>'
@@ -171,7 +158,6 @@ texts:
   invalid-operation: Ungültiger Vorgang
   health-ready: Bereit
   health-unavailable: Datenbank nicht erreichbar
-# Singular und Plural jeder Einheit.
 time-units:
   week: Woche
   weeks: Wochen
@@ -185,7 +171,6 @@ time-units:
   seconds: Sekunden
 hidden: Verborgen
 none: '—'
-# Feldtitel im Discord-Embed
 webhook:
   player: Spieler
   staff: Teammitglied
@@ -217,8 +202,6 @@ inquiry:
     - '<#F2F4FF>Erteilt: <#009DFF>{created}'
     - '<#F2F4FF>Dauer: <#009DFF>{duration} <#F2F4FF>• Verbleibend: <#009DFF>{remaining}'
     - '<#F2F4FF>Ende: <#009DFF>{expires}'
-
-# Import aus einem anderen Straf-Plugin. {source}: vanilla, litebans oder advancedban
 import:
   reading: '{prefix} <#009DFF>{source} <#F2F4FF>wird gelesen...'
   preview: '{prefix} <#F2F4FF>{source}: <#009DFF>{total} <#F2F4FF>gefunden • Banns: {bans} • Stummschaltungen: {mutes} • Verwarnungen: {warnings} • Kicks: {kicks} • jetzt aktiv: <#009DFF>{active} <#F2F4FF>• bereits importiert: {already}'

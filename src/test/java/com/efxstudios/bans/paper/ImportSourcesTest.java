@@ -15,7 +15,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** The readers on SQLite, plus the vanilla JSON format. */
 class ImportSourcesTest extends ImportSourcesContract {
     @TempDir
     Path directory;

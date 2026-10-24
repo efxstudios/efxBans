@@ -10,7 +10,6 @@ import net.kyori.adventure.text.format.TextColor;
 import java.util.Map;
 import java.util.Optional;
 
-/** Presentation of one related account; an active account/IP ban takes precedence over online state. */
 final class AltsView {
     static final TextColor BANNED = TextColor.color(0xFF5656);
     static final TextColor ONLINE = TextColor.color(0x90EE90);

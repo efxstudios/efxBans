@@ -6,14 +6,10 @@ import java.net.UnknownHostException;
 public final class Addresses {
     private Addresses() {}
 
-    /**
-     * Normalizes a literal IPv4 or IPv6 address, or returns null.
-     * Hostnames are never resolved: user input must not trigger DNS lookups.
-     */
     public static String parse(String input) {
         if (input.contains(":")) {
             if (!input.matches("[0-9a-fA-F:.]+")) return null;
-            // With ':' present, the JDK parses a literal or throws; it does not fall back to DNS.
+
             try {
                 return InetAddress.getByName(input).getHostAddress();
             } catch (UnknownHostException e) {

@@ -21,7 +21,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-/** Applies bans at login and mutes in chat. Every path fails closed when the database can't be verified. */
 public final class Enforcement implements Listener {
     private static final Set<Kind> BANS = Set.of(Kind.BAN, Kind.IPBAN);
     private static final Set<Kind> MUTES = Set.of(Kind.MUTE);
@@ -34,7 +33,6 @@ public final class Enforcement implements Listener {
         this.plugin = plugin;
     }
 
-    /** Checks the database itself, not the cache: a ban issued on another server a moment ago still applies. */
     @EventHandler(priority = EventPriority.HIGHEST)
     public void login(AsyncPlayerPreLoginEvent event) {
         if (event.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED) return;
@@ -44,10 +42,10 @@ public final class Enforcement implements Listener {
             String address = event.getAddress().getHostAddress();
             List<Punishment> rows = plugin.engine().call(store -> store.activeFor(event.getUniqueId(), address)).get(8, TimeUnit.SECONDS);
             Optional<Punishment> ban = rows.stream().filter(p -> BANS.contains(p.kind())).findFirst();
-            ban.ifPresent(p -> event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_BANNED, messages.render("screen." + p.kind().key(), messages.values(p))));
+            ban.ifPresent(p -> Platform.disallow(event, AsyncPlayerPreLoginEvent.Result.KICK_BANNED, messages.render("screen." + p.kind().key(), messages.values(p))));
         } catch (Exception e) {
             if (e instanceof InterruptedException) Thread.currentThread().interrupt();
-            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, messages.render("unavailable", Map.of()));
+            Platform.disallow(event, AsyncPlayerPreLoginEvent.Result.KICK_OTHER, messages.render("unavailable", Map.of()));
         }
     }
 
@@ -56,10 +54,9 @@ public final class Enforcement implements Listener {
         Player player = event.getPlayer();
         plugin.track(player);
         plugin.deliverWarnings(player);
-        // Closes the race between the login check and a ban committed right after it.
-        // Permissions never bypass an already recorded punishment.
+
         var messages = plugin.settings().messages();
-        plugin.punishment(player, BANS).ifPresent(p -> player.kick(messages.render("screen." + p.kind().key(), messages.values(p))));
+        plugin.punishment(player, BANS).ifPresent(p -> Platform.kick(player, messages.render("screen." + p.kind().key(), messages.values(p))));
         if (plugin.updates() != null) plugin.updates().notify(player);
     }
 
@@ -81,7 +78,6 @@ public final class Enforcement implements Listener {
         });
     }
 
-    /** Blocks private-message style commands (mute.blocked-commands) for muted players, namespaced or not. */
     @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
     public void command(PlayerCommandPreprocessEvent event) {
         String label = event.getMessage().substring(1).split(" ", 2)[0].toLowerCase(Locale.ROOT);

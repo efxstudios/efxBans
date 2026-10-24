@@ -62,7 +62,7 @@ class WebhookPayloadTest {
         assertEquals("Yasak", field(embed, "Punishment").get("value").getAsString());
         assertTrue(embed.getAsJsonObject("footer").get("text").getAsString().endsWith("#128"));
         assertEquals(NOW.toString(), embed.get("timestamp").getAsString());
-        assertEquals(6, embed.getAsJsonArray("fields").size()); // No separate status field.
+        assertEquals(6, embed.getAsJsonArray("fields").size());
     }
 
     @Test
@@ -89,7 +89,7 @@ class WebhookPayloadTest {
         var undo = embed(payload(settings(false), "undo", punishment(Kind.WARN, PLAYER, "Notch", "REVOKED", 0), ""));
         assertEquals(0x9B59B6, undo.get("color").getAsInt());
         assertTrue(undo.get("title").getAsString().endsWith("Ceza geri alındı"));
-        assertEquals(4, undo.getAsJsonArray("fields").size()); // No duration or expiry for a warning.
+        assertEquals(4, undo.getAsJsonArray("fields").size());
     }
 
     @Test

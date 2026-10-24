@@ -12,7 +12,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-/** Immutable snapshots, indexed by UUID and IP: chat checks never run SQL or scan the whole table. */
 public final class ActiveCache {
     private record Index(Map<Long, Punishment> ids, Map<UUID, List<Punishment>> accounts, Map<String, List<Punishment>> ips) {}
 
@@ -48,7 +47,6 @@ public final class ActiveCache {
         index = new Index(Map.copyOf(ids), Map.copyOf(accounts), Map.copyOf(ips));
     }
 
-    /** Names of accounts that currently have one of these punishments (address-only IP bans have no name). */
     public Set<String> names(Set<Kind> kinds) {
         long now = System.currentTimeMillis();
         Set<String> names = new HashSet<>();
@@ -56,7 +54,6 @@ public final class ActiveCache {
         return names;
     }
 
-    /** Newest active punishment of the given kinds for this account or, for IP bans, this address. */
     public Optional<Punishment> find(UUID uuid, String ip, Set<Kind> kinds) {
         Index snapshot = index;
         long now = System.currentTimeMillis();

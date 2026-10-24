@@ -1,12 +1,5 @@
-# Do not edit config-version; efxBans uses it to upgrade this file after an update.
 config-version: 3
-
-# Every message is MiniMessage. Use a list or a YAML | block for multiple lines.
-# Placeholders: {prefix} {player} {staff} {reason} {duration} {remaining} {id}
-# {type} {created} {expires} {status} {closed_at} {closed_by} {close_reason}
-# Announcements also have {change_reason}. The IP is never part of the default messages.
 prefix: '<b><gradient:#FF5656:#FFB8B8>ᴇꜰxʙᴀɴꜱ</gradient></b> <gray>»'
-# Java DateTimeFormatter pattern. The timezone is set in config.yml.
 date-format: 'yyyy-MM-dd HH:mm:ss'
 permanent: Permanent
 types:
@@ -48,7 +41,6 @@ unavailable: '{prefix} <#F2F4FF>The punishment system can''t verify anything rig
 unknown-player: '{prefix} <#FF5656>{player} <#F2F4FF>could not be verified. Use the name of a known player.'
 usage: '{prefix} <#F2F4FF>Usage: <#009DFF>{usage}'
 not-found: '{prefix} <#F2F4FF>No <#009DFF>matching records <#F2F4FF>were found.'
-# Confirmations go only to the staff member or console that ran the command; announcements are separate.
 confirmation:
   ban: '{prefix} <#55FF55>{player} was banned.'
   ipban: '{prefix} <#55FF55>{player} was IP banned.'
@@ -79,7 +71,6 @@ detail:
 audit-entry: '<gray>{created} <#009DFF>{action} <#F2F4FF>• {staff} • {reason}'
 ip-detail: '{prefix} <#F2F4FF>Private IP information: <#009DFF>{ip}'
 alts-header: '{prefix} <#F2F4FF>Accounts that shared an IP with <#FF5656>{player} <#F2F4FF>in the past. <#009DFF>This does not prove they are the same person.'
-# Player names are colored by ban and online status; banned names link to /lookup.
 alts-entry: '{player}'
 
 broadcast:
@@ -140,12 +131,8 @@ screen:
     - '<#FF5656>You were kicked from the server.'
     - '<#F2F4FF>Staff: <#009DFF>{staff}'
     - '<#F2F4FF>Reason: <#009DFF>{reason}'
-
-# Clicking opens the GitHub release page. Placeholders: {current} {latest}
 update:
   available: '{prefix} <#F2F4FF>A new efxBans version is available: <#009DFF>{latest} <#F2F4FF>(installed: {current}). <#009DFF><u>Click to download</u>'
-
-# The entries below are plain text, inserted into other messages as they are.
 usages:
   ban: '/ban [-s] <player> [duration] <reason>'
   ipban: '/ipban [-s] <player|IP> [duration] <reason>'
@@ -171,7 +158,6 @@ texts:
   invalid-operation: Invalid operation
   health-ready: Ready
   health-unavailable: Database unreachable
-# Singular and plural form of each unit.
 time-units:
   week: week
   weeks: weeks
@@ -185,7 +171,6 @@ time-units:
   seconds: seconds
 hidden: Hidden
 none: '—'
-# Discord embed field titles
 webhook:
   player: Player
   staff: Staff
@@ -217,8 +202,6 @@ inquiry:
     - '<#F2F4FF>Issued: <#009DFF>{created}'
     - '<#F2F4FF>Duration: <#009DFF>{duration} <#F2F4FF>• Remaining: <#009DFF>{remaining}'
     - '<#F2F4FF>Ends: <#009DFF>{expires}'
-
-# Import from another punishment plugin. {source}: vanilla, litebans or advancedban
 import:
   reading: '{prefix} <#F2F4FF>Reading <#009DFF>{source}<#F2F4FF>...'
   preview: '{prefix} <#F2F4FF>{source}: <#009DFF>{total} <#F2F4FF>found • bans: {bans} • mutes: {mutes} • warnings: {warnings} • kicks: {kicks} • active now: <#009DFF>{active} <#F2F4FF>• already imported: {already}'

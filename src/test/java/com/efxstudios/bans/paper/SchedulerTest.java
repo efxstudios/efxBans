@@ -23,7 +23,7 @@ class SchedulerTest {
             Runnable action = mock(Runnable.class);
             when(entity.execute(eq(plugin), any(), isNull(), eq(1L))).thenReturn(true);
 
-            new Scheduler(plugin).sender(player, action);
+            new FoliaScheduler(plugin).sender(player, action);
 
             verify(entity).execute(plugin, action, null, 1);
             verify(action, never()).run();
@@ -39,7 +39,7 @@ class SchedulerTest {
             Player player = mock(Player.class);
             Runnable action = mock(Runnable.class);
             bukkit.when(() -> Bukkit.isOwnedByCurrentRegion(player)).thenReturn(true);
-            new Scheduler(plugin).entity(player, action);
+            new FoliaScheduler(plugin).entity(player, action);
             verify(action).run();
             verify(player, never()).getScheduler();
 
@@ -47,7 +47,7 @@ class SchedulerTest {
             EntityScheduler entity = mock(EntityScheduler.class);
             when(player.getScheduler()).thenReturn(entity);
             Runnable retired = mock(Runnable.class);
-            new Scheduler(plugin).entity(player, action, retired);
+            new FoliaScheduler(plugin).entity(player, action, retired);
             verify(retired).run();
             verify(action, times(1)).run();
         }
@@ -61,10 +61,10 @@ class SchedulerTest {
             GlobalRegionScheduler global = mock(GlobalRegionScheduler.class);
             bukkit.when(Bukkit::getGlobalRegionScheduler).thenReturn(global);
             Runnable action = mock(Runnable.class);
-            new Scheduler(plugin).sender(mock(CommandSender.class), action);
+            new FoliaScheduler(plugin).sender(mock(CommandSender.class), action);
             verify(global).execute(eq(plugin), any(Runnable.class));
             when(plugin.isEnabled()).thenReturn(false);
-            new Scheduler(plugin).global(action);
+            new FoliaScheduler(plugin).global(action);
             verifyNoMoreInteractions(global);
         }
     }

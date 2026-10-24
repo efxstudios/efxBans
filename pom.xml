@@ -6,7 +6,7 @@
 
     <groupId>com.efxstudios</groupId>
     <artifactId>efxBans</artifactId>
-    <!-- The single place the version lives. Change it with scripts/release.ps1. -->
+
     <version>${revision}</version>
 
     <name>efxBans</name>
@@ -21,18 +21,25 @@
 
     <properties>
         <revision>1.0.0</revision>
-        <!-- Internal repository metadata; update checks use Modrinth. -->
+
         <github.repository>efxstudios/efxBans</github.repository>
-        <maven.compiler.release>21</maven.compiler.release>
+        <maven.compiler.release>16</maven.compiler.release>
+        <maven.compiler.testRelease>21</maven.compiler.testRelease>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <!-- Oldest supported Paper API: compiling against it proves no newer API is used. -->
+
         <paper.version>1.20.6-R0.1-SNAPSHOT</paper.version>
+        <paper.group>io.papermc.paper</paper.group>
+        <adventure.version>4.26.1</adventure.version>
         <mockito.version>5.20.0</mockito.version>
         <sqlite.version>3.49.1.0</sqlite.version>
         <mysql.version>9.7.0</mysql.version>
     </properties>
 
     <repositories>
+        <repository>
+            <id>minecraft-libraries</id>
+            <url>https://libraries.minecraft.net/</url>
+        </repository>
         <repository>
             <id>papermc-repo</id>
             <url>https://repo.papermc.io/repository/maven-public/</url>
@@ -41,17 +48,53 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.papermc.paper</groupId>
+            <groupId>com.mojang</groupId>
+            <artifactId>brigadier</artifactId>
+            <version>1.0.18</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>${paper.group}</groupId>
             <artifactId>paper-api</artifactId>
             <version>${paper.version}</version>
             <scope>provided</scope>
+            <exclusions>
+                <exclusion><groupId>net.kyori</groupId><artifactId>*</artifactId></exclusion>
+                <exclusion><groupId>com.google.code.gson</groupId><artifactId>gson</artifactId></exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-text-logger-slf4j</artifactId>
+            <version>${adventure.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-text-minimessage</artifactId>
+            <version>${adventure.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-text-serializer-plain</artifactId>
+            <version>${adventure.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-text-serializer-gson</artifactId>
+            <version>${adventure.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.13.2</version>
         </dependency>
         <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
             <version>5.1.0</version>
         </dependency>
-        <!-- Both JDBC drivers are supplied by Paper and Folia. Adventure follows the Paper API transitively. -->
+
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
@@ -96,13 +139,13 @@
                 <directory>src/main/resources</directory>
                 <filtering>true</filtering>
                 <includes>
-                    <include>paper-plugin.yml</include>
+                    <include>plugin.yml</include>
                 </includes>
             </resource>
             <resource>
                 <directory>src/main/resources</directory>
                 <excludes>
-                    <exclude>paper-plugin.yml</exclude>
+                    <exclude>plugin.yml</exclude>
                 </excludes>
             </resource>
         </resources>
@@ -174,6 +217,14 @@
                             </filters>
                             <relocations>
                                 <relocation>
+                                    <pattern>net.kyori</pattern>
+                                    <shadedPattern>com.efxstudios.bans.libs.kyori</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.google.gson</pattern>
+                                    <shadedPattern>com.efxstudios.bans.libs.gson</shadedPattern>
+                                </relocation>
+                                <relocation>
                                     <pattern>com.zaxxer.hikari</pattern>
                                     <shadedPattern>com.efxstudios.bans.libs.hikari</shadedPattern>
                                 </relocation>
@@ -187,4 +238,28 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>legacy-api</id>
+            <properties>
+                <paper.group>com.destroystokyo.paper</paper.group>
+                <paper.version>1.16.5-R0.1-SNAPSHOT</paper.version>
+                <maven.test.skip>true</maven.test.skip>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <excludes>
+                                <exclude>**/ModernCommands.java</exclude>
+                                <exclude>**/FoliaScheduler.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

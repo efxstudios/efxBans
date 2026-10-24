@@ -4,10 +4,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * A Semantic Versioning 2.0.0 version (major.minor.patch[-pre.release][+build]).
- * Build metadata is accepted but ignored, exactly as the specification requires for precedence.
- */
 public record Version(int major, int minor, int patch, List<String> preRelease) implements Comparable<Version> {
     private static final String IDENTIFIER = "(?:0|[1-9]\\d*|\\d*[A-Za-z-][0-9A-Za-z-]*)";
     private static final Pattern SEMVER = Pattern.compile(
@@ -20,7 +16,6 @@ public record Version(int major, int minor, int patch, List<String> preRelease) 
         preRelease = List.copyOf(preRelease);
     }
 
-    /** Parses "1.2.3", "v1.2.3" or "1.2.3-beta.1+build.5". Throws IllegalArgumentException otherwise. */
     public static Version parse(String text) {
         String value = text.strip();
         if (value.startsWith("v") || value.startsWith("V")) value = value.substring(1);
@@ -48,7 +43,7 @@ public record Version(int major, int minor, int patch, List<String> preRelease) 
         if (result == 0) result = Integer.compare(minor, other.minor);
         if (result == 0) result = Integer.compare(patch, other.patch);
         if (result != 0) return result;
-        // A release ranks above any pre-release of the same major.minor.patch.
+
         if (preRelease.isEmpty() || other.preRelease.isEmpty()) return Boolean.compare(preRelease.isEmpty(), other.preRelease.isEmpty());
         for (int i = 0; i < Math.min(preRelease.size(), other.preRelease.size()); i++) {
             result = compareIdentifier(preRelease.get(i), other.preRelease.get(i));
@@ -64,7 +59,7 @@ public record Version(int major, int minor, int patch, List<String> preRelease) 
             int length = Integer.compare(left.length(), right.length());
             return length != 0 ? length : left.compareTo(right);
         }
-        // Numeric identifiers always have lower precedence than alphanumeric ones.
+
         if (leftNumeric != rightNumeric) return leftNumeric ? -1 : 1;
         return left.compareTo(right);
     }

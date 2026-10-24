@@ -15,7 +15,6 @@ public final class Permissions {
         this.plugin = plugin;
     }
 
-    /** Console and RCON get no implicit bypass: they also need permissions.console-allowed to list the node. */
     public boolean has(CommandSender sender, String permission) {
         if (sender instanceof ConsoleCommandSender || sender instanceof RemoteConsoleCommandSender) {
             boolean allowed = plugin.settings().consolePermissions().stream().anyMatch(p -> p.equals("*") || p.equals(permission)
@@ -29,10 +28,6 @@ public final class Permissions {
         if (!has(sender, permission)) throw new Problem("no-permission", Map.of("permission", permission));
     }
 
-    /**
-     * Full check for issuing a punishment: base node, temporary/permanent node and maximum duration.
-     * The highest matching duration limit applies; efxbans.duration.unlimited removes the limit only.
-     */
     public void issue(CommandSender sender, Kind kind, long duration) {
         require(sender, "efxbans." + kind.key());
         if (!kind.timed()) return;
@@ -48,7 +43,6 @@ public final class Permissions {
         return !kind.timed() || has(sender, "efxbans." + kind.key() + ".temporary") || has(sender, "efxbans." + kind.key() + ".permanent");
     }
 
-    /** Bit mask of the kinds this player is exempt from. */
     public int exemptions(CommandSender player) {
         int mask = 0;
         for (Kind k : Kind.values()) if (has(player, "efxbans.exempt.all") || has(player, "efxbans.exempt." + k.key())) mask |= k.bit();

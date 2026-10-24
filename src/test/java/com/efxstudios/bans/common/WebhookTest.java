@@ -21,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** Delivery and retry rules, against a local HTTP server standing in for Discord. */
 class WebhookTest {
     private HttpServer server;
     private final Queue<Integer> statuses = new ConcurrentLinkedQueue<>();

@@ -26,10 +26,6 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * /efxbans import &lt;source&gt; [confirm]. Without confirm it only reads the source and shows what would be
- * imported. With confirm it stores the records in batches; running it again skips what was already imported.
- */
 final class Importer {
     static final List<String> SOURCES = List.of("vanilla", "litebans", "advancedban");
     private static final int BATCH = 500;
@@ -47,8 +43,8 @@ final class Importer {
         if (plugin.engine() == null) throw new Problem("import-no-database");
         if (!running.compareAndSet(false, true)) throw new Problem("import-busy");
         plugin.tell(sender, "import.reading", Map.of("source", name));
-        // Reading another plugin's database can take a while: never on the main thread.
-        Bukkit.getAsyncScheduler().runNow(plugin, task -> {
+
+        plugin.scheduler().async(() -> {
             try {
                 ImportSources.Defaults defaults = defaults();
                 List<ImportRecord> records = read(name, defaults);
@@ -82,7 +78,6 @@ final class Importer {
         }));
     }
 
-    /** One batch per database call, so other punishments are never blocked behind a big import. */
     private void store(CommandSender sender, String source, List<ImportRecord> records, int from, Store.ImportResult total) {
         if (from >= records.size()) {
             running.set(false);
@@ -120,8 +115,6 @@ final class Importer {
         return String.valueOf(records.stream().filter(r -> wanted.contains(r.kind())).count());
     }
 
-    // ---------------------------------------------------------------- sources
-
     private ImportSources.Defaults defaults() {
         Messages messages = plugin.settings().messages();
         return new ImportSources.Defaults(messages.text("texts.no-reason", "No reason given"), messages.text("texts.ip-target", "IP target"), "CONSOLE",
@@ -131,7 +124,7 @@ final class Importer {
     private List<ImportRecord> read(String source, ImportSources.Defaults defaults) throws Exception {
         long now = System.currentTimeMillis();
         return switch (source) {
-            // Minecraft keeps the ban lists in the server's working directory, even with a separate world folder.
+
             case "vanilla" -> ImportSources.vanilla(readIfExists(Path.of("banned-players.json")), readIfExists(Path.of("banned-ips.json")), defaults);
             case "advancedban" -> {
                 try (Connection c = advancedBan()) {
@@ -147,10 +140,6 @@ final class Importer {
         };
     }
 
-    /**
-     * A name without a UUID: the server's user cache knows everyone who joined; on an offline-mode server the
-     * UUID is derived from the name, exactly as Minecraft does. Never a network lookup.
-     */
     static UUID resolveName(String name) {
         OfflinePlayer cached = Bukkit.getOfflinePlayerIfCached(name);
         if (cached != null) return cached.getUniqueId();
@@ -163,12 +152,16 @@ final class Importer {
     }
 
     private static YamlConfiguration otherConfig(String pluginName) {
-        File file = new File(new File(Bukkit.getPluginsFolder(), pluginName), "config.yml");
+        File file = new File(new File(pluginDirectory(), pluginName), "config.yml");
         if (!file.exists()) throw new Problem("import-not-found", Map.of("file", "plugins/" + pluginName + "/config.yml"));
         return YamlConfiguration.loadConfiguration(file);
     }
 
-    /** LiteBans on MySQL or MariaDB. Its default H2 file needs a driver that Paper does not ship. */
+    private static File pluginDirectory() {
+        Plugin plugin = Bukkit.getPluginManager().getPlugin("efxBans");
+        return plugin == null ? new File("plugins") : plugin.getDataFolder().getParentFile();
+    }
+
     private static Connection liteBans(YamlConfiguration config) throws Exception {
         String driver = config.getString("sql.driver", "H2");
         if (!driver.equalsIgnoreCase("mysql") && !driver.equalsIgnoreCase("mariadb"))
@@ -181,7 +174,6 @@ final class Importer {
                 config.getString("sql.username", ""), config.getString("sql.password", ""));
     }
 
-    /** AdvancedBan on MySQL, or its default HSQLDB file read through AdvancedBan's own driver while it runs. */
     private static Connection advancedBan() throws Exception {
         YamlConfiguration config = otherConfig("AdvancedBan");
         if (config.getBoolean("UseMySQL", false)) {
@@ -194,7 +186,7 @@ final class Importer {
         }
         Plugin advancedBan = Bukkit.getPluginManager().getPlugin("AdvancedBan");
         if (advancedBan == null || !advancedBan.isEnabled()) throw new Problem("import-plugin-required", Map.of("plugin", "AdvancedBan"));
-        // Same URL as AdvancedBan's DynamicDataSource: the JVM then shares its open database instead of opening the file twice.
+
         String url = "jdbc:hsqldb:file:" + advancedBan.getDataFolder().getPath() + "/data/storage;hsqldb.lock_file=false";
         Driver driver = hsqldbDriver(advancedBan.getClass().getClassLoader());
         Properties login = new Properties();
@@ -210,7 +202,7 @@ final class Importer {
             try {
                 return (Driver) Class.forName(name, true, loader).getDeclaredConstructor().newInstance();
             } catch (ClassNotFoundException ignored) {
-                // Try the next name.
+
             }
         }
         throw new Problem("import-plugin-required", Map.of("plugin", "AdvancedBan"));

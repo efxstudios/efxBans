@@ -1,9 +1,6 @@
 # efxBans
 
-<!-- Copy-ready project descriptions: .github/listings/modrinth.md and .github/listings/spigot.bbcode.
-     Replace BANNER_URL at the top of each listing with your public banner image URL. -->
-
-Punishment management for Paper and Folia servers: bans, IP bans, mutes, kicks and warnings. Commands are built on Paper's Brigadier API, so there is no command library to install. If the database can't be reached, players are refused at login instead of being let in unchecked.
+Punishment management for Paper and Folia servers: bans, IP bans, mutes, kicks and warnings. Commands use one Brigadier tree with native Paper registration on modern servers and a Bukkit command adapter on older Paper builds. If the database can't be reached, players are refused at login instead of being let in unchecked.
 
 Messages ship in English, Turkish, German, Spanish and French, and every one of them can be edited.
 
@@ -11,7 +8,7 @@ Messages ship in English, Turkish, German, Spanish and French, and every one of 
   <a href="https://papermc.io"><img alt="Supported on Paper" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/supported/paper_vector.svg" height="40"></a>
   <img alt="Won’t support Spigot" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/unsupported/spigot_vector.svg" height="40">
   <a href="https://discord.gg/efxstudios"><img alt="Chat with us on Discord" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/social/discord-plural_vector.svg" height="40"></a>
-  <img alt="Built with Java 21" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/built-with/java21_vector.svg" height="40">
+  <img alt="Built with Java" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/built-with/java_vector.svg" height="40">
   <img alt="Built with Maven" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/built-with/maven_vector.svg" height="40">
   <a href="https://modrinth.com/project/efxbans/"><img alt="Available on Modrinth" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/available/modrinth_vector.svg" height="40"></a>
   <a href="CHANGELOG.md"><img alt="Changelog" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/documentation/changelog_vector.svg" height="40"></a>
@@ -34,12 +31,14 @@ Messages ship in English, Turkish, German, Spanish and French, and every one of 
 
 | Server | Java |
 | --- | --- |
-| Paper 1.20.6 – 1.21.11 | 21+ |
+| Paper 1.16.5 | 16 |
+| Paper 1.17 – 1.19.4 | 17 |
+| Paper 1.20 – 1.21.11 | 21+ |
 | Paper 26.1 – 26.3 | 25+ |
 
-The plugin compiles against Paper 1.20.6 and uses the entity, region, global and async schedulers shared by Paper and Folia. Spigot and Bukkit are not supported. Other Paper forks such as Purpur should work but are not tested.
+One JAR targets Java 16 bytecode for Paper 1.16.5–26.3. Shared code is also compiled against the 1.16.5 API in CI. Modern command registration and Folia schedulers are loaded only when their APIs exist; older Paper builds use the main-thread scheduler. MiniMessage, Adventure and Gson are bundled privately to avoid server library version conflicts. Spigot and Bukkit are not supported. Other Paper forks such as Purpur should work but are not tested.
 
-Live command, punishment and `/alts` checks passed on Paper 1.20.6 (Java 21, test clients connected through ViaVersion) and Folia 1.21.11 (Java 25, two region tick threads). Automated tests also pass against the Paper 26.3 API. MySQL verification is a separate CI job; the local checks used SQLite.
+Live command, punishment and `/alts` checks cover Paper 1.16.5 (Java 16), Paper 1.20.6 (Java 21, test clients connected through ViaVersion) and Folia 1.21.11 (Java 25, two region tick threads). Automated tests also pass against the Paper 26.3 API. MySQL verification is a separate CI job; the local checks used SQLite.
 
 After editing the config, `/efxbans reload` is enough. Changing command names, aliases or the database needs a full restart.
 
@@ -229,7 +228,7 @@ Project-page descriptions: [Modrinth / Markdown](.github/listings/modrinth.md) �
 JDK 21+ is required. Maven is downloaded by the wrapper. Security reports: [security policy](.github/SECURITY.md).
 
 ```bash
-./mvnw clean verify       # Windows: .\mvnw.cmd clean verify
+./mvnw clean verify
 ```
 
 The server JAR is `target/efxBans-<version>.jar`; `original-*.jar` is a build intermediate.
@@ -244,7 +243,7 @@ src/test/java/            Unit and database contract tests
 scripts/                  Release preparation
 ```
 
-CI builds with Java 21 and 25, checks newer Paper APIs, and runs the database contracts on MySQL 8.0 and 8.4. Local MySQL tests run only when `EFXBANS_MYSQL_HOST` is set. Use a disposable `efxbans_test` database: the tests drop its tables. Set `EFXBANS_MYSQL_DATABASE`, `EFXBANS_MYSQL_USER` and `EFXBANS_MYSQL_PASSWORD` as needed, then run `./mvnw test -Dtest='MySql*Test'`.
+Build with JDK 21 or 25; the default artifact targets Java 16. `./mvnw -Plegacy-api clean compile` checks the shared sources against Paper 1.16.5 and deliberately excludes the two modern API adapters. CI builds with Java 21 and 25, checks the oldest and newest Paper APIs, and runs the database contracts on MySQL 8.0 and 8.4. Local MySQL tests run only when `EFXBANS_MYSQL_HOST` is set. Use a disposable `efxbans_test` database: the tests drop its tables. Set `EFXBANS_MYSQL_DATABASE`, `EFXBANS_MYSQL_USER` and `EFXBANS_MYSQL_PASSWORD` as needed, then run `./mvnw test -Dtest='MySql*Test'`.
 
 Keep SQL values bound as parameters. Player-facing text belongs in all five language files, and user input must remain unparsed MiniMessage text. Keep database operations on `Engine` and player operations on their entity scheduler. Permission checks must run again after async lookups. Add tests and a changelog entry for behavior changes.
 

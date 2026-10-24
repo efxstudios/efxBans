@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** Behaviour every database backend must have. Subclasses provide the connection settings. */
 abstract class StoreContract {
     static final Set<Kind> BANS = Set.of(Kind.BAN, Kind.IPBAN);
 
@@ -30,7 +29,6 @@ abstract class StoreContract {
 
     abstract DatabaseSettings settings();
 
-    /** Called before each test, before the store is opened: start from an empty database. */
     abstract void reset() throws Exception;
 
     @BeforeEach
@@ -279,8 +277,8 @@ abstract class StoreContract {
         var existing = issue(Kind.BAN, a, null, 0);
         List<ImportRecord> batch = List.of(
                 imported("bans:1", Kind.BAN, c, null, future, "ACTIVE"),
-                imported("bans:2", Kind.BAN, a, null, 0, "ACTIVE"),          // a already has an active efxBans ban
-                imported("bans:3", Kind.BAN, a, null, 0, "REMOVED"),         // history is always kept
+                imported("bans:2", Kind.BAN, a, null, 0, "ACTIVE"),
+                imported("bans:3", Kind.BAN, a, null, 0, "REMOVED"),
                 imported("bans:4", Kind.IPBAN, null, "10.1.2.3", 0, "ACTIVE"),
                 imported("warnings:1", Kind.WARN, c, null, 0, "EXECUTED"));
 

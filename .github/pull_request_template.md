@@ -1,7 +1,5 @@
 ## What does this change?
 
-<!-- Briefly: what and why. Link the issue if there is one: Closes #123 -->
-
 ## Checklist
 
 - [ ] `./mvnw verify` passes locally

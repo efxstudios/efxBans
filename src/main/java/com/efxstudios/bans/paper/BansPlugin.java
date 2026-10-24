@@ -6,7 +6,6 @@ import com.efxstudios.bans.common.Problem;
 import com.efxstudios.bans.common.Punishment;
 import com.efxstudios.bans.common.Store;
 import com.efxstudios.bans.common.Webhook;
-import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -24,7 +23,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
 public final class BansPlugin extends JavaPlugin {
-    /** Last known identity of an online player, refreshed every 30 seconds. */
+
     public record Online(UUID uuid, String name, String ip, int exemptions) {}
 
     private static final long REFRESH_TICKS = 600;
@@ -36,7 +35,7 @@ public final class BansPlugin extends JavaPlugin {
     private UpdateChecker updates;
     private final Map<UUID, Online> online = new ConcurrentHashMap<>();
     private final Map<UUID, Object> warningDeliveryInFlight = new ConcurrentHashMap<>();
-    private final Scheduler scheduler = new Scheduler(this);
+    private final Scheduler scheduler = Scheduler.create(this);
     private Map<String, List<String>> registeredTopology;
 
     public Settings settings() { return settings; }
@@ -59,16 +58,14 @@ public final class BansPlugin extends JavaPlugin {
         webhook = new Webhook(getLogger()::warning);
         updates = new UpdateChecker(this);
         getServer().getPluginManager().registerEvents(new Enforcement(this), this);
-        // Runs after ordinary handlers; the public registrar replaces colliding roots.
-        getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS
-                .newHandler(event -> new CommandTree(this).register(event.registrar()))
-                .priority(Integer.MAX_VALUE));
+
+        CommandRegistration.install(this);
         openDatabase();
         for (Player p : Bukkit.getOnlinePlayers()) player(p, () -> track(p));
-        // Also detects commands registered by plugins after this plugin's lifecycle handler.
+
         global(() -> CommandTree.audit(this));
         updates.configure(settings.updates());
-        getLogger().info("efxBans " + getPluginMeta().getVersion() + " ready. Paper " + Bukkit.getMinecraftVersion() + "; "
+        getLogger().info("efxBans " + getDescription().getVersion() + " ready. Paper " + Platform.minecraftVersion() + "; "
                 + settings.database().type() + "; changes to preset commands need a restart.");
     }
 
@@ -80,7 +77,7 @@ public final class BansPlugin extends JavaPlugin {
                     e -> getLogger().severe("Database refresh failed; keeping the previous punishment cache: " + e.getClass().getSimpleName()));
         } catch (Exception e) {
             if (store != null) store.close();
-            // Without a database every login is refused (fail closed) instead of letting banned players in.
+
             getLogger().severe("Could not open the database (" + e.getClass().getSimpleName() + "). Logins will be refused until it works. "
                     + "Fix the settings and restart the server.");
         }
@@ -89,8 +86,7 @@ public final class BansPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         if (updates != null) updates.stop();
-        Bukkit.getGlobalRegionScheduler().cancelTasks(this);
-        Bukkit.getAsyncScheduler().cancelTasks(this);
+        scheduler.cancel();
         if (engine != null) engine.close();
         if (webhook != null) webhook.close();
     }
@@ -98,6 +94,8 @@ public final class BansPlugin extends JavaPlugin {
     public boolean healthy() {
         return engine != null && engine.healthy(settings.staleMillis());
     }
+
+    Scheduler scheduler() { return scheduler; }
 
     public void global(Runnable action) { scheduler.global(action); }
 
@@ -109,7 +107,7 @@ public final class BansPlugin extends JavaPlugin {
 
     public void tell(CommandSender sender, String key, Map<String, String> values) {
         var message = settings.messages().render(key, values);
-        sender(sender, () -> sender.sendMessage(message));
+        sender(sender, () -> Platform.send(sender, message));
     }
 
     public void error(CommandSender sender, Throwable error) {
@@ -126,7 +124,6 @@ public final class BansPlugin extends JavaPlugin {
         }
     }
 
-    /** Runs database work on its worker, then completes on the sender's owning region. */
     public <T> void async(CommandSender sender, Engine.Operation<T> work, Consumer<T> complete) {
         if (engine == null) {
             tell(sender, "database-error", Map.of());
@@ -152,23 +149,21 @@ public final class BansPlugin extends JavaPlugin {
         });
     }
 
-    /** Called on the player's region at join; the task follows them between regions. */
     public void track(Player player) {
         remember(player);
-        player.getScheduler().runAtFixedRate(this, task -> remember(player), null, REFRESH_TICKS, REFRESH_TICKS);
+        scheduler.track(player, () -> remember(player), REFRESH_TICKS);
     }
 
     public static String address(Player p) {
         return p.getAddress() == null ? null : p.getAddress().getAddress().getHostAddress();
     }
 
-    /** Shows warnings issued while the player was offline. They stay pending until shown. */
     public void deliverWarnings(Player player) {
         Object delivery = new Object();
         if (engine == null || warningDeliveryInFlight.putIfAbsent(player.getUniqueId(), delivery) != null) return;
         UUID uuid = player.getUniqueId();
         engine.call(s -> s.pendingWarnings(uuid)).whenComplete((rows, error) -> {
-            // Retirement can discard an entity task, so never leave the UUID permanently in flight.
+
             if (error != null) { warningDeliveryInFlight.remove(uuid, delivery); return; }
             player(player, () -> {
                 try {
@@ -201,7 +196,7 @@ public final class BansPlugin extends JavaPlugin {
             boolean restart = !next.database().equals(settings.database())
                     || next.pollMillis() != settings.pollMillis()
                     || !registeredTopology.equals(next.topology());
-            // Database and poll interval stay fixed until restart. Everything else swaps at once, after validation.
+
             settings = new Settings(settings.database(), settings.pollMillis(), next.staleMillis(), next.publicBroadcast(), next.defaultMax(),
                     next.limits(), next.muteCommands(), next.consolePermissions(), next.presets(), next.messages(),
                     next.webhook(), next.updates());
@@ -214,18 +209,17 @@ public final class BansPlugin extends JavaPlugin {
         }
     }
 
-    /** Change-feed observer: each recipient is handled on their own region. */
     private void changes(List<Store.Change> changes) {
         global(() -> {
             for (Store.Change change : changes) {
                 Punishment p = change.punishment();
                 if (change.action().equals("IMPORT")) {
-                    // Imported from another plugin: applied quietly, never announced.
+
                     if ((p.kind() == Kind.BAN || p.kind() == Kind.IPBAN) && p.active(System.currentTimeMillis()))
                         for (Player player : Bukkit.getOnlinePlayers())
                             player(player, () -> {
                                 if (p.active(System.currentTimeMillis()) && p.matches(player.getUniqueId(), address(player)))
-                                    player.kick(settings.messages().render("screen." + p.kind().key(), settings.messages().values(p)));
+                                    Platform.kick(player, settings.messages().render("screen." + p.kind().key(), settings.messages().values(p)));
                             });
                     continue;
                 }
@@ -255,9 +249,9 @@ public final class BansPlugin extends JavaPlugin {
                 long now = System.currentTimeMillis();
                 switch (p.kind()) {
                 case BAN, IPBAN -> {
-                    if (p.active(now)) player.kick(settings.messages().render("screen." + p.kind().key() + "-issued", values));
+                    if (p.active(now)) Platform.kick(player, settings.messages().render("screen." + p.kind().key() + "-issued", values));
                 }
-                case KICK -> player.kick(settings.messages().render("screen.kick", values));
+                case KICK -> Platform.kick(player, settings.messages().render("screen.kick", values));
                 case MUTE -> {
                     if (!p.silent() && p.active(now)) tell(player, "muted-notice", values);
                 }

@@ -1,22 +1,3 @@
-<#
-.SYNOPSIS
-    Prepares a release: sets the version, dates the changelog, runs the tests, commits and tags.
-
-.DESCRIPTION
-    Versions follow Semantic Versioning (MAJOR.MINOR.PATCH):
-      MAJOR  incompatible change (config/database/command behaviour admins must act on)
-      MINOR  new feature, backwards compatible
-      PATCH  bug fix only
-
-    Nothing is pushed. When the script finishes, publish with:
-      git push origin main --follow-tags
-    GitHub Actions (release.yml) then builds the JAR and creates the GitHub release.
-
-.EXAMPLE
-    ./scripts/release.ps1 -Version 1.2.0
-.EXAMPLE
-    ./scripts/release.ps1 -Version 2.0.0-beta.1
-#>
 param(
     [Parameter(Mandatory = $true)]
     [string]$Version
@@ -48,16 +29,12 @@ if (git status --porcelain) { Fail 'The working tree has uncommitted changes.' }
 $branch = (git rev-parse --abbrev-ref HEAD).Trim()
 if ($branch -ne 'main') { Fail "Releases are cut from main only (current branch: $branch)." }
 if (git tag --list $tag) { Fail "Tag $tag already exists." }
-
-# 1. Version: <revision> in pom.xml is the single source.
 $pom = Read-Utf8 'pom.xml'
 $current = [regex]::Match($pom, '<revision>([^<]+)</revision>').Groups[1].Value
 if (-not $current) { Fail 'No <revision> found in pom.xml.' }
 if ($current -ne $Version) {
     Write-Utf8 'pom.xml' ($pom -replace "<revision>$([regex]::Escape($current))</revision>", "<revision>$Version</revision>")
 }
-
-# 2. Changelog: the [Unreleased] notes become this version's notes.
 $changelog = Read-Utf8 'CHANGELOG.md'
 $unreleased = [regex]::Match($changelog, '(?s)## \[Unreleased\]\s*(.*?)(?=\r?\n## \[|\z)')
 if (-not $unreleased.Success -or -not $unreleased.Groups[1].Value.Trim()) {
@@ -67,16 +44,12 @@ $date = Get-Date -Format 'yyyy-MM-dd'
 $changelog = $changelog.Remove($unreleased.Index, $unreleased.Length).Insert($unreleased.Index,
     "## [Unreleased]`n`n## [$Version] - $date`n`n" + $unreleased.Groups[1].Value.Trim() + "`n")
 Write-Utf8 'CHANGELOG.md' $changelog
-
-# 3. Full build with tests, the same as CI and the release workflow.
 $wrapper = if ($IsWindows -or $env:OS -eq 'Windows_NT') { '.\mvnw.cmd' } else { './mvnw' }
 & $wrapper -B -ntp clean verify
 if ($LASTEXITCODE -ne 0) {
     git checkout -- pom.xml CHANGELOG.md
     Fail 'Build or tests failed; pom.xml and CHANGELOG.md were restored.'
 }
-
-# 4. Commit and annotated tag.
 git add pom.xml CHANGELOG.md
 git commit -m "Release $Version"
 git tag -a $tag -m "efxBans $Version"

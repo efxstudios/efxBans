@@ -20,32 +20,13 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
-/**
- * A versioned YAML file in the data folder.
- *
- * <p>Every file starts with {@code config-version}. When the file on disk is older than the version this
- * build expects, the file is backed up to {@code backups/}, the migration steps between the two versions
- * run in order (renames, removals, value changes), and the file is rebuilt from the bundled template:
- * new keys and comments come from the template, existing values are kept. A file from a newer build is
- * refused rather than silently downgraded.
- */
 final class ConfigFile {
     static final String VERSION_KEY = "config-version";
 
-    /** Upgrades a file from version {@code from} to {@code from + 1}. */
     record Step(int from, String description, Consumer<YamlConfiguration> apply) {}
 
     private ConfigFile() {}
 
-    /**
-     * Loads {@code file}, migrating it first if needed.
-     *
-     * @param template     the bundled default for this file (its config-version is the target version)
-     * @param legacy       the version assumed when the file has no config-version key
-     * @param steps        migration steps, any order
-     * @param userOwned    sections owned entirely by the user (e.g. presets): copied as a whole, never
-     *                     mixed with the template's examples, and left out when the user removed them
-     */
     static YamlConfiguration load(Path file, String template, int legacy, List<Step> steps, Set<String> userOwned, Path backups, Logger logger)
             throws IOException, InvalidConfigurationException {
         YamlConfiguration defaults = parse(template);
@@ -74,7 +55,6 @@ final class ConfigFile {
         return config;
     }
 
-    /** The template with every value the user had copied over it. */
     static YamlConfiguration rebuild(YamlConfiguration user, String template, Set<String> userOwned) throws InvalidConfigurationException {
         YamlConfiguration result = parse(template);
         for (String root : userOwned) {
@@ -115,7 +95,6 @@ final class ConfigFile {
         }
     }
 
-    /** Copies the file to backups/name-v3-20261024-031500.yml. */
     static Path backup(Path file, int version, Path backups) throws IOException {
         Files.createDirectories(backups);
         String name = file.getFileName().toString().replaceFirst("\\.yml$", "");
@@ -126,7 +105,6 @@ final class ConfigFile {
         return backup;
     }
 
-    /** Writes through a temporary file so a crash never leaves a half-written config. */
     static void save(YamlConfiguration config, Path file) throws IOException {
         Path temporary = Files.createTempFile(file.getParent(), file.getFileName().toString(), ".tmp");
         try {
@@ -141,16 +119,12 @@ final class ConfigFile {
         }
     }
 
-    // ---------------------------------------------------------------- helpers for migration steps
-
-    /** Moves a value to a new key, unless the new key already has one. */
     static void rename(YamlConfiguration config, String from, String to) {
         if (!config.isSet(from)) return;
         if (!config.isSet(to)) config.set(to, config.get(from));
         config.set(from, null);
     }
 
-    /** Adds values to a string list if they are missing. */
     static void addToList(YamlConfiguration config, String key, String... values) {
         if (!config.isList(key)) return;
         List<String> list = new java.util.ArrayList<>(config.getStringList(key));

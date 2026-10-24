@@ -20,9 +20,6 @@ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import io.papermc.paper.command.brigadier.CommandSourceStack;
-import io.papermc.paper.command.brigadier.Commands;
-import io.papermc.paper.command.brigadier.argument.CustomArgumentType;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import org.bukkit.Bukkit;
@@ -48,17 +45,22 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-/**
- * All Brigadier commands. Permission checks happen twice: in {@code requires} (hides the command) and again
- * when the command runs, because settings and permissions can change between tab completion and execution.
- */
-public final class CommandTree {
-    /** Built-in commands in help order; usage text comes from the language file (usages.*). */
+public final class CommandTree<S> {
+    public interface Registrar<S> {
+        com.mojang.brigadier.CommandDispatcher<S> getDispatcher();
+        Set<String> register(LiteralCommandNode<S> node, String description, List<String> aliases);
+    }
+
+    private final java.util.function.Function<S, CommandSender> source;
+
+    private LiteralArgumentBuilder<S> literal(String label) { return LiteralArgumentBuilder.literal(label); }
+    private <T> RequiredArgumentBuilder<S, T> argument(String label, ArgumentType<T> type) { return RequiredArgumentBuilder.argument(label, type); }
+
     private static final List<String> COMMANDS = List.of("ban", "ipban", "mute", "kick", "warn", "unban", "unmute", "undo",
             "history", "punishment", "lookup", "banlist", "mutelist", "alts");
-    /** Admin subcommands with their own usage line (usages.*), not root commands. */
+
     private static final List<String> SUBCOMMANDS = List.of("import");
-    /** Built-in aliases, kept for servers upgrading from releases where these were the command names. */
+
     private static final Map<String, List<String>> ALIASES = Map.of("lookup", List.of("sorgu"));
     private static final List<String> DURATION_SUGGESTIONS = List.of("30m", "2h", "1d", "7d", "30d");
 
@@ -66,80 +68,80 @@ public final class CommandTree {
     private final Permissions permissions;
     private final Importer importer;
 
-    public CommandTree(BansPlugin plugin) {
+    public CommandTree(BansPlugin plugin) { this(plugin, s -> (CommandSender) s); }
+
+    public CommandTree(BansPlugin plugin, java.util.function.Function<S, CommandSender> source) {
+        this.source = source;
         this.plugin = plugin;
         this.permissions = plugin.permissions();
         this.importer = new Importer(plugin);
     }
 
-    // ---------------------------------------------------------------- registration
-
-    public void register(Commands registrar) {
+    public void register(Registrar<S> registrar) {
         for (Kind kind : Kind.values()) registerPunishment(registrar, kind);
         Map<String, Set<Kind>> removable = Map.of("unban", Set.of(Kind.BAN, Kind.IPBAN), "unmute", Set.of(Kind.MUTE));
         for (String label : List.of("unban", "unmute", "undo")) {
-            var node = Commands.literal(label)
-                    .requires(s -> permissions.has(s.getSender(), "efxbans." + label))
+            var node = literal(label)
+                    .requires(s -> permissions.has(source.apply(s), "efxbans." + label))
                     .executes(c -> usage(c, label))
                     .then(target(removable.get(label)).executes(c -> run(c, () -> remove(c, label))));
             register(registrar, node.build(), List.of());
         }
         for (String label : List.of("banlist", "mutelist")) {
-            var node = Commands.literal(label)
-                    .requires(s -> permissions.has(s.getSender(), "efxbans." + label))
+            var node = literal(label)
+                    .requires(s -> permissions.has(source.apply(s), "efxbans." + label))
                     .executes(c -> run(c, () -> list(sender(c), label, 1)))
-                    .then(Commands.argument("page", IntegerArgumentType.integer(1, 100_000_000))
+                    .then(argument("page", IntegerArgumentType.integer(1, 100_000_000))
                             .executes(c -> run(c, () -> list(sender(c), label, page(c)))));
             register(registrar, node.build(), List.of());
         }
-        var inquiry = Commands.literal("lookup")
-                .requires(s -> permissions.has(s.getSender(), "efxbans.lookup"))
+        var inquiry = literal("lookup")
+                .requires(s -> permissions.has(source.apply(s), "efxbans.lookup"))
                 .executes(c -> usage(c, "lookup"))
                 .then(target().executes(c -> run(c, () -> inquiry(sender(c), targetValue(c), 1)))
-                        .then(Commands.argument("page", IntegerArgumentType.integer(1, 100_000_000))
+                        .then(argument("page", IntegerArgumentType.integer(1, 100_000_000))
                                 .executes(c -> run(c, () -> inquiry(sender(c), targetValue(c), page(c))))));
         register(registrar, inquiry.build(), ALIASES.get("lookup"));
-        var history = Commands.literal("history")
-                .requires(s -> permissions.has(s.getSender(), "efxbans.history"))
+        var history = literal("history")
+                .requires(s -> permissions.has(source.apply(s), "efxbans.history"))
                 .executes(c -> usage(c, "history"))
                 .then(target().executes(c -> run(c, () -> history(c, 1)))
-                        .then(Commands.argument("page", IntegerArgumentType.integer(1, 100_000))
+                        .then(argument("page", IntegerArgumentType.integer(1, 100_000))
                                 .executes(c -> run(c, () -> history(c, page(c))))));
         register(registrar, history.build(), List.of());
-        var detail = Commands.literal("punishment")
-                .requires(s -> permissions.has(s.getSender(), "efxbans.history"))
+        var detail = literal("punishment")
+                .requires(s -> permissions.has(source.apply(s), "efxbans.history"))
                 .executes(c -> usage(c, "punishment"))
                 .then(target().executes(c -> run(c, () -> detail(c))));
         register(registrar, detail.build(), List.of());
-        var alts = Commands.literal("alts")
-                .requires(s -> permissions.has(s.getSender(), "efxbans.alts"))
+        var alts = literal("alts")
+                .requires(s -> permissions.has(source.apply(s), "efxbans.alts"))
                 .executes(c -> usage(c, "alts"))
                 .then(target().executes(c -> run(c, () -> alts(c))));
         register(registrar, alts.build(), List.of());
         registerAdmin(registrar);
-        // Trees keep only the registered label; values and permissions are read from the current config.
+
         for (Settings.Preset preset : plugin.settings().presets().values()) {
             if (!preset.enabled()) continue;
             String label = preset.command();
-            var node = Commands.literal(label)
-                    .requires(s -> canPreset(s.getSender(), label))
+            var node = literal(label)
+                    .requires(s -> canPreset(source.apply(s), label))
                     .executes(c -> usage(c, label))
                     .then(target().executes(c -> run(c, () -> preset(c, label))));
             register(registrar, node.build(), preset.aliases());
         }
     }
 
-    /** /ban, /ipban, /mute, /kick, /warn with an optional -s (silent) flag before the target. */
-    private void registerPunishment(Commands registrar, Kind kind) {
+    private void registerPunishment(Registrar<S> registrar, Kind kind) {
         String label = kind.key();
-        LiteralArgumentBuilder<CommandSourceStack> node = Commands.literal(label)
-                .requires(s -> permissions.canIssue(s.getSender(), kind))
+        LiteralArgumentBuilder<S> node = literal(label)
+                .requires(s -> permissions.canIssue(source.apply(s), kind))
                 .executes(c -> usage(c, label));
         node.then(target().executes(c -> usage(c, label))
                 .then(details(kind).executes(c -> run(c, () -> issue(c, kind, false)))));
         if (kind != Kind.WARN) {
-            node.then(Commands.literal("-s")
-                    .requires(s -> permissions.has(s.getSender(), "efxbans." + label + ".silent"))
+            node.then(literal("-s")
+                    .requires(s -> permissions.has(source.apply(s), "efxbans." + label + ".silent"))
                     .executes(c -> usage(c, label))
                     .then(target().executes(c -> usage(c, label))
                             .then(details(kind).executes(c -> run(c, () -> issue(c, kind, true))))));
@@ -147,54 +149,52 @@ public final class CommandTree {
         register(registrar, node.build(), List.of());
     }
 
-    private void registerAdmin(Commands registrar) {
-        var admin = Commands.literal("efxbans")
-                .requires(s -> canAdmin(s.getSender()))
+    private void registerAdmin(Registrar<S> registrar) {
+        var admin = literal("efxbans")
+                .requires(s -> canAdmin(source.apply(s)))
                 .executes(this::help);
-        admin.then(Commands.literal("help").executes(this::help));
-        admin.then(Commands.literal("reload")
-                .requires(s -> permissions.has(s.getSender(), "efxbans.reload"))
+        admin.then(literal("help").executes(this::help));
+        admin.then(literal("reload")
+                .requires(s -> permissions.has(source.apply(s), "efxbans.reload"))
                 .executes(c -> run(c, () -> {
                     permissions.require(sender(c), "efxbans.reload");
                     plugin.reload(sender(c));
                 })));
-        admin.then(Commands.literal("import")
-                .requires(s -> permissions.has(s.getSender(), "efxbans.import"))
+        admin.then(literal("import")
+                .requires(s -> permissions.has(source.apply(s), "efxbans.import"))
                 .executes(c -> usage(c, "import"))
-                .then(Commands.argument("source", StringArgumentType.word())
+                .then(argument("source", StringArgumentType.word())
                         .suggests((c, b) -> {
                             Importer.SOURCES.stream().filter(s -> s.startsWith(b.getRemainingLowerCase())).forEach(b::suggest);
                             return b.buildFuture();
                         })
                         .executes(c -> run(c, () -> startImport(c, false)))
-                        .then(Commands.literal("confirm").executes(c -> run(c, () -> startImport(c, true))))));
-        admin.then(Commands.literal("status")
-                .requires(s -> permissions.has(s.getSender(), "efxbans.admin"))
+                        .then(literal("confirm").executes(c -> run(c, () -> startImport(c, true))))));
+        admin.then(literal("status")
+                .requires(s -> permissions.has(source.apply(s), "efxbans.admin"))
                 .executes(c -> run(c, () -> status(sender(c)))));
         register(registrar, admin.build(), List.of());
     }
 
-    private void register(Commands registrar, LiteralCommandNode<CommandSourceStack> node, List<String> aliases) {
+    private void register(Registrar<S> registrar, LiteralCommandNode<S> node, List<String> aliases) {
         registerRoot(registrar, node);
         for (String alias : aliases) {
-            // Paper's alias registration keeps aliases that are already taken. Register each alias as a full
-            // literal instead, so it gets the same replacement and permission rules as the command itself.
-            var copy = Commands.literal(alias).requires(node.getRequirement()).executes(node.getCommand());
+
+            var copy = literal(alias).requires(node.getRequirement()).executes(node.getCommand());
             node.getChildren().forEach(copy::then);
             registerRoot(registrar, copy.build());
         }
     }
 
-    private void registerRoot(Commands registrar, LiteralCommandNode<CommandSourceStack> node) {
+    private void registerRoot(Registrar<S> registrar, LiteralCommandNode<S> node) {
         String label = node.getLiteral();
-        Command existing = Bukkit.getCommandMap().getCommand(label);
+        Command existing = Platform.commandMap().getCommand(label);
         boolean own = existing instanceof PluginIdentifiableCommand identifiable && identifiable.getPlugin() == plugin;
         if (!own && (existing != null || registrar.getDispatcher().getRoot().getChild(label) != null))
             plugin.getLogger().warning("/" + label + " was taken over by efxBans. The other plugin's namespaced command still works.");
         registrar.register(node, "efxBans", List.of());
     }
 
-    /** After startup: warns if another plugin replaced one of our labels later on. */
     public static void audit(BansPlugin plugin) {
         Set<String> labels = new TreeSet<>(COMMANDS);
         ALIASES.values().forEach(labels::addAll);
@@ -204,28 +204,20 @@ public final class CommandTree {
             labels.addAll(p.aliases());
         });
         for (String label : labels) {
-            Command command = Bukkit.getCommandMap().getCommand(label);
+            Command command = Platform.commandMap().getCommand(label);
             if (command instanceof PluginIdentifiableCommand owner && owner.getPlugin() != plugin)
                 plugin.getLogger().warning("/" + label + " was replaced after efxBans registered it, by " + owner.getPlugin().getName() + ". /efxbans:"
                         + label + " still works; check the other plugin's command settings.");
         }
     }
 
-    // ---------------------------------------------------------------- arguments
-
-    /** Player name, UUID, IP or #ID. Suggests online players; any other valid name can still be typed. */
-    private RequiredArgumentBuilder<CommandSourceStack, String> target() {
+    private RequiredArgumentBuilder<S, String> target() {
         return target(null);
     }
 
-    /**
-     * With {@code punished} set, suggests the players who currently have such a punishment (online or not)
-     * instead of everyone online: /unban lists banned players, /unmute muted ones. The names come from the
-     * in-memory punishment cache, so a keystroke never runs SQL.
-     */
-    private RequiredArgumentBuilder<CommandSourceStack, String> target(Set<Kind> punished) {
+    private RequiredArgumentBuilder<S, String> target(Set<Kind> punished) {
         Supplier<String> error = () -> messages().text("texts.target-required", "A player, IP or #ID is required.");
-        return Commands.argument("target", new TargetArgument(error)).suggests((c, b) -> {
+        return argument("target", new TargetArgument(error)).suggests((c, b) -> {
             Set<String> names = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
             if (punished == null) plugin.online().values().forEach(player -> names.add(player.name()));
             else if (plugin.engine() != null) names.addAll(plugin.engine().cache.names(punished));
@@ -235,28 +227,24 @@ public final class CommandTree {
         });
     }
 
-    private RequiredArgumentBuilder<CommandSourceStack, String> details(Kind kind) {
-        return Commands.argument("details", StringArgumentType.greedyString()).suggests((c, b) -> durationSuggestions(c, b, kind));
+    private RequiredArgumentBuilder<S, String> details(Kind kind) {
+        return argument("details", StringArgumentType.greedyString()).suggests((c, b) -> durationSuggestions(c, b, kind));
     }
 
-    /** Only durations the sender may actually use are suggested. */
-    private CompletableFuture<Suggestions> durationSuggestions(CommandContext<CommandSourceStack> c, SuggestionsBuilder b, Kind kind) {
+    private CompletableFuture<Suggestions> durationSuggestions(CommandContext<S> c, SuggestionsBuilder b, Kind kind) {
         if (!kind.timed() || !permissions.has(sender(c), "efxbans." + kind.key() + ".temporary")) return b.buildFuture();
         for (String time : DURATION_SUGGESTIONS) {
             try {
                 permissions.issue(sender(c), kind, Times.parse(time));
                 if (time.startsWith(b.getRemainingLowerCase())) b.suggest(time);
             } catch (IllegalArgumentException ignored) {
-                // Above the sender's maximum.
+
             }
         }
         return b.buildFuture();
     }
 
-    // ---------------------------------------------------------------- issuing
-
-    /** "[duration] reason": a first word that starts with a digit must be a valid duration. */
-    private void issue(CommandContext<CommandSourceStack> c, Kind kind, boolean silent) {
+    private void issue(CommandContext<S> c, Kind kind, boolean silent) {
         String details = StringArgumentType.getString(c, "details").strip();
         long duration = 0;
         String reason = details;
@@ -269,7 +257,7 @@ public final class CommandTree {
         issue(sender(c), targetValue(c), kind, duration, reason, null, silent);
     }
 
-    private void preset(CommandContext<CommandSourceStack> c, String label) {
+    private void preset(CommandContext<S> c, String label) {
         Settings.Preset preset = plugin.settings().presets().get(label);
         if (preset == null || !preset.enabled()) throw new Problem("preset-disabled");
         permissions.require(sender(c), preset.permission());
@@ -309,7 +297,6 @@ public final class CommandTree {
         });
     }
 
-    /** Read another player's permissions only on their region, then re-check the actor on their own region. */
     private void refreshTarget(CommandSender sender, Kind kind, long duration, String reason, UUID uuid, String name, String ip, int fallback,
                                String presetLabel, boolean silent) {
         Consumer<Integer> finish = exemptions -> plugin.sender(sender, () -> {
@@ -327,7 +314,6 @@ public final class CommandTree {
         plugin.player(live, () -> finish.accept(live.isOnline() ? permissions.exemptions(live) : fallback), () -> finish.accept(fallback));
     }
 
-    /** Last checks on the sender's region, then the database write. */
     private void persist(CommandSender sender, Kind kind, long duration, String reason, UUID uuid, String name, String ip, int exemptions,
                          String presetLabel, boolean silent) {
         permissions.issue(sender, kind, duration);
@@ -350,9 +336,7 @@ public final class CommandTree {
         });
     }
 
-    // ---------------------------------------------------------------- removal
-
-    private void remove(CommandContext<CommandSourceStack> c, String command) {
+    private void remove(CommandContext<S> c, String command) {
         CommandSender sender = sender(c);
         permissions.require(sender, "efxbans." + command);
         String input = targetValue(c);
@@ -370,7 +354,6 @@ public final class CommandTree {
         else resolve(sender, input, p -> remove(sender, null, p.uuid(), null, kinds, undo, command));
     }
 
-    /** Removal takes no reason; the stored close reason stays empty. */
     private void remove(CommandSender sender, Long id, UUID uuid, String ip, Set<Kind> kinds, boolean undo, String command) {
         permissions.require(sender, "efxbans." + command);
         String actor = actor(sender);
@@ -387,9 +370,7 @@ public final class CommandTree {
         });
     }
 
-    // ---------------------------------------------------------------- lookups
-
-    private void history(CommandContext<CommandSourceStack> c, int page) {
+    private void history(CommandContext<S> c, int page) {
         CommandSender sender = sender(c);
         permissions.require(sender, "efxbans.history");
         resolve(sender, targetValue(c), profile -> plugin.async(sender, s -> s.history(profile.uuid(), page), rows -> {
@@ -399,7 +380,7 @@ public final class CommandTree {
         }));
     }
 
-    private void detail(CommandContext<CommandSourceStack> c) {
+    private void detail(CommandContext<S> c) {
         CommandSender sender = sender(c);
         permissions.require(sender, "efxbans.history");
         long id = id(targetValue(c));
@@ -419,7 +400,7 @@ public final class CommandTree {
         });
     }
 
-    private void alts(CommandContext<CommandSourceStack> c) {
+    private void alts(CommandContext<S> c) {
         CommandSender sender = sender(c);
         permissions.require(sender, "efxbans.alts");
         resolve(sender, targetValue(c), profile -> plugin.async(sender, s -> s.alts(profile.uuid()), rows -> {
@@ -429,15 +410,11 @@ public final class CommandTree {
             boolean canLookup = permissions.has(sender, "efxbans.lookup");
             for (var row : rows) {
                 var ban = plugin.engine().cache.find(row.uuid(), row.ip(), Set.of(Kind.BAN, Kind.IPBAN));
-                sender.sendMessage(AltsView.entry(messages(), row, plugin.online().containsKey(row.uuid()), ban, canLookup));
+                Platform.send(sender, AltsView.entry(messages(), row, plugin.online().containsKey(row.uuid()), ban, canLookup));
             }
         }));
     }
 
-    /**
-     * Name or UUID to account: online players first, then known profiles, then (for accounts that never
-     * joined) the offline-mode UUID or Paper's authenticated profile lookup.
-     */
     private void resolve(CommandSender sender, String input, Consumer<Store.Profile> done) {
         if (!input.matches("[A-Za-z0-9_]{1,16}|[0-9a-fA-F-]{36}")) throw new Problem("account-required");
         for (var p : plugin.online().values()) {
@@ -456,7 +433,7 @@ public final class CommandTree {
                 done.accept(new Store.Profile(explicit, input, null, 0));
                 return;
             } catch (IllegalArgumentException ignored) {
-                // A name, continue below.
+
             }
             OfflinePlayer cached = Bukkit.getOfflinePlayerIfCached(input);
             if (cached != null && cached.getName() != null) {
@@ -468,17 +445,20 @@ public final class CommandTree {
                 done.accept(new Store.Profile(offline, input, null, 0));
                 return;
             }
-            Bukkit.createPlayerProfile(input).update().orTimeout(6, TimeUnit.SECONDS).whenComplete((profile, error) -> plugin.sender(sender, () -> {
-                if (error != null || profile.getUniqueId() == null) {
+            CompletableFuture.supplyAsync(() -> {
+                var profile = Bukkit.createProfile(input);
+                profile.complete(true);
+                return profile;
+            }).orTimeout(6, TimeUnit.SECONDS).whenComplete((profile, error) -> plugin.sender(sender, () -> {
+                if (error != null || profile.getId() == null) {
                     plugin.tell(sender, "unknown-player", Map.of("player", input));
                     return;
                 }
-                done.accept(new Store.Profile(profile.getUniqueId(), Objects.requireNonNullElse(profile.getName(), input), null, 0));
+                done.accept(new Store.Profile(profile.getId(), Objects.requireNonNullElse(profile.getName(), input), null, 0));
             }));
         });
     }
 
-    /** /banlist and /mutelist with clickable entries and page buttons. */
     private void list(CommandSender sender, String label, int page) {
         permissions.require(sender, "efxbans." + label);
         Set<Kind> kinds = label.equals("banlist") ? Set.of(Kind.BAN, Kind.IPBAN) : Set.of(Kind.MUTE);
@@ -493,13 +473,12 @@ public final class CommandTree {
                 var values = messages.values(p);
                 Component line = messages.render("lists.entry", values);
                 if (canInspect) line = line.hoverEvent(messages.render("lists.hover", values)).clickEvent(ClickEvent.runCommand("/efxbans:lookup #" + p.id()));
-                sender.sendMessage(line);
+                Platform.send(sender, line);
             }
-            sender.sendMessage(navigation(result, "/efxbans:" + label + " "));
+            Platform.send(sender, navigation(result, "/efxbans:" + label + " "));
         });
     }
 
-    /** /lookup (alias /sorgu): active bans, IP bans and mutes for a player, an IP or an #ID. */
     private void inquiry(CommandSender sender, String input, int page) {
         permissions.require(sender, "efxbans.lookup");
         Long id = input.startsWith("#") ? id(input) : null;
@@ -517,7 +496,7 @@ public final class CommandTree {
                 return;
             }
             for (var p : result.entries()) plugin.tell(sender, "inquiry.entry", messages().values(p));
-            sender.sendMessage(navigation(result, "/efxbans:lookup " + input + " "));
+            Platform.send(sender, navigation(result, "/efxbans:lookup " + input + " "));
         });
     }
 
@@ -532,17 +511,15 @@ public final class CommandTree {
         return nav;
     }
 
-    // ---------------------------------------------------------------- admin and help
-
     private void status(CommandSender sender) {
         permissions.require(sender, "efxbans.admin");
         Messages messages = messages();
         String health = plugin.healthy() ? messages.text("texts.health-ready", "Ready") : messages.text("texts.health-unavailable", "Database unreachable");
-        plugin.tell(sender, "health", Map.of("health", health, "version", Bukkit.getMinecraftVersion(), "plugin", plugin.getPluginMeta().getVersion(),
+        plugin.tell(sender, "health", Map.of("health", health, "version", Platform.minecraftVersion(), "plugin", plugin.getDescription().getVersion(),
                 "database", plugin.settings().database().type()));
     }
 
-    private void startImport(CommandContext<CommandSourceStack> c, boolean confirm) {
+    private void startImport(CommandContext<S> c, boolean confirm) {
         permissions.require(sender(c), "efxbans.import");
         importer.run(sender(c), StringArgumentType.getString(c, "source"), confirm);
     }
@@ -564,8 +541,7 @@ public final class CommandTree {
                 || Arrays.stream(Kind.values()).anyMatch(k -> permissions.canIssue(sender, k));
     }
 
-    /** Lists only the commands the sender may use. */
-    private int help(CommandContext<CommandSourceStack> c) {
+    private int help(CommandContext<S> c) {
         CommandSender sender = sender(c);
         plugin.tell(sender, "help-header", Map.of());
         for (String label : COMMANDS) {
@@ -581,20 +557,17 @@ public final class CommandTree {
         return 1;
     }
 
-    private int usage(CommandContext<CommandSourceStack> c, String label) {
+    private int usage(CommandContext<S> c, String label) {
         plugin.tell(sender(c), "usage", Map.of("usage", usageText(label)));
         return 0;
     }
 
-    /** Built-in commands have their own line; presets share usages.preset. Inserted as literal text. */
     private String usageText(String label) {
         if (COMMANDS.contains(label) || SUBCOMMANDS.contains(label)) return messages().text("usages." + label, "/" + label);
         return messages().text("usages.preset", "/{command} <player>").replace("{command}", label);
     }
 
-    // ---------------------------------------------------------------- helpers
-
-    private int run(CommandContext<CommandSourceStack> c, Runnable work) {
+    private int run(CommandContext<S> c, Runnable work) {
         try {
             work.run();
             return 1;
@@ -617,20 +590,20 @@ public final class CommandTree {
             long id = Long.parseLong(value.startsWith("#") ? value.substring(1) : value);
             if (id > 0) return id;
         } catch (NumberFormatException ignored) {
-            // Fall through to the user error.
+
         }
         throw new Problem("id-required");
     }
 
-    private static int page(CommandContext<CommandSourceStack> c) {
+    private int page(CommandContext<S> c) {
         return IntegerArgumentType.getInteger(c, "page");
     }
 
-    private static CommandSender sender(CommandContext<CommandSourceStack> c) {
-        return c.getSource().getSender();
+    private CommandSender sender(CommandContext<S> c) {
+        return source.apply(c.getSource());
     }
 
-    private static String targetValue(CommandContext<CommandSourceStack> c) {
+    private String targetValue(CommandContext<S> c) {
         return c.getArgument("target", String.class);
     }
 
@@ -638,17 +611,11 @@ public final class CommandTree {
         return sender instanceof Player p ? p.getUniqueId().toString() : "CONSOLE";
     }
 
-    /** One token up to the next space. StringArgumentType.word() would reject the ':' of IPv6 and the '#' of IDs. */
-    public static final class TargetArgument implements CustomArgumentType<String, String> {
+    public static final class TargetArgument implements ArgumentType<String> {
         private final Supplier<String> error;
 
         public TargetArgument(Supplier<String> error) {
             this.error = error;
-        }
-
-        @Override
-        public ArgumentType<String> getNativeType() {
-            return StringArgumentType.greedyString();
         }
 
         @Override

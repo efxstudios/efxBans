@@ -8,10 +8,6 @@ import java.sql.DriverManager;
 import java.sql.Statement;
 import java.util.Objects;
 
-/**
- * The store contract against a real MySQL server. Runs only when EFXBANS_MYSQL_HOST is set; CI starts
- * a MySQL service for it. The database is wiped before every test, so never point this at real data.
- */
 @EnabledIfEnvironmentVariable(named = "EFXBANS_MYSQL_HOST", matches = ".+")
 class MySqlStoreTest extends StoreContract {
     private static final String[] TABLES = {"efxb_meta", "efxb_profiles", "efxb_names", "efxb_ips", "efxb_punishments", "efxb_changes",

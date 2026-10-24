@@ -5,7 +5,6 @@ updates:
     schedule:
       interval: weekly
     ignore:
-      # Compiled against the oldest supported Paper API, including its Adventure dependencies.
       - dependency-name: "io.papermc.paper:paper-api"
     groups:
       test-libraries:

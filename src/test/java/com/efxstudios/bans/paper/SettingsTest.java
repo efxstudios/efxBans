@@ -29,7 +29,6 @@ import static org.mockito.Mockito.when;
 class SettingsTest {
     private static final PlainTextComponentSerializer PLAIN = PlainTextComponentSerializer.plainText();
 
-    /** config.yml as efxBans 1.0 shipped it (no config-version, no language). */
     private static final String CONFIG_1_0 = """
             database:
               type: sqlite
@@ -69,7 +68,6 @@ class SettingsTest {
         return new String(resource(name).readAllBytes(), StandardCharsets.UTF_8);
     }
 
-    /** A current-layout config.yml with only the given extra lines. */
     private void config(String yaml) throws Exception {
         Files.writeString(directory.resolve("config.yml"), "config-version: 2\n" + yaml);
     }
@@ -77,8 +75,6 @@ class SettingsTest {
     private static String render(Messages messages, String key, Map<String, String> values) {
         return PLAIN.serialize(messages.render(key, values));
     }
-
-    // ---------------------------------------------------------------- languages
 
     @Test
     void freshInstallUsesEnglishAndCopiesEveryBundledLanguage() throws Exception {
@@ -113,7 +109,7 @@ class SettingsTest {
             var keys = Languages.texts(ConfigFile.parse(bundled("lang/" + code + ".yml"))).keySet();
             for (String key : english) assertTrue(keys.contains(key), code + " is missing " + key);
             for (String key : keys) assertTrue(english.contains(key), code + " has an extra key " + key);
-            // Every template must parse, with the same placeholders as English.
+
             new Messages("", Languages.texts(ConfigFile.parse(bundled("lang/" + code + ".yml"))), "UTC");
         }
     }
@@ -141,8 +137,6 @@ class SettingsTest {
         assertTrue(error.getMessage().contains("lang/xx.yml"));
     }
 
-    // ---------------------------------------------------------------- migration
-
     @Test
     void altsMigrationReplacesOldDefaultAndKeepsCustomLayout() throws Exception {
         config("language: en\n");
@@ -165,7 +159,6 @@ class SettingsTest {
 
         Settings settings = Settings.load(plugin);
 
-        // config.yml: version raised, values kept, new keys added with their comments, user presets kept as they were.
         String text = Files.readString(directory.resolve("config.yml"));
         YamlConfiguration config = YamlConfiguration.loadConfiguration(directory.resolve("config.yml").toFile());
         assertEquals(Settings.CONFIG_VERSION, config.getInt("config-version"));
@@ -178,7 +171,6 @@ class SettingsTest {
         assertEquals(List.of("hile"), List.copyOf(config.getConfigurationSection("presets").getKeys(false)));
         assertEquals(List.of("hile"), List.copyOf(settings.presets().keySet()));
 
-        // messages.yml became lang/tr.yml: customized values kept, untouched first-release values updated.
         assertFalse(Files.exists(directory.resolve("messages.yml")));
         var messages = settings.messages();
         assertEquals("Özel duyuru Alice", render(messages, "broadcast.ban", Map.of("player", "Alice")));
@@ -186,14 +178,12 @@ class SettingsTest {
         assertTrue(render(messages, "update.available", Map.of("latest", "9.9.9")).contains("9.9.9"));
         assertNull(YamlConfiguration.loadConfiguration(directory.resolve("lang/tr.yml").toFile()).get("timezone"));
 
-        // Both old files are in backups/.
         try (Stream<Path> backups = Files.list(directory.resolve("backups"))) {
             List<String> names = backups.map(p -> p.getFileName().toString()).toList();
             assertTrue(names.stream().anyMatch(n -> n.startsWith("config-v1-")), names.toString());
             assertTrue(names.stream().anyMatch(n -> n.startsWith("messages-v0-")), names.toString());
         }
 
-        // A second start changes nothing.
         String after = Files.readString(directory.resolve("config.yml"));
         Settings.load(plugin);
         assertEquals(after, Files.readString(directory.resolve("config.yml")));
@@ -206,8 +196,6 @@ class SettingsTest {
         assertTrue(error.getMessage().contains("newer"));
         assertEquals("config-version: 99\n", Files.readString(directory.resolve("config.yml")));
     }
-
-    // ---------------------------------------------------------------- settings
 
     @Test
     void version2ConfigRemovesOldIntegrationSettingsAndKeepsDiscordValues() throws Exception {
@@ -223,7 +211,6 @@ class SettingsTest {
         }
     }
 
-
     @Test
     void updateCheckerCanBeDisabledAndRejectsBadIntervals() throws Exception {
         config("update-checker:\n  enabled: false\n");
@@ -236,7 +223,7 @@ class SettingsTest {
     void deletingAllPresetsDoesNotResurrectPackagedExamples() throws Exception {
         config("presets: {}\n");
         assertTrue(Settings.load(plugin).presets().isEmpty());
-        // An old file without a presets section: the migration must not add the examples either.
+
         Files.writeString(directory.resolve("config.yml"), "database:\n  type: sqlite\n");
         assertTrue(Settings.load(plugin).presets().isEmpty());
     }

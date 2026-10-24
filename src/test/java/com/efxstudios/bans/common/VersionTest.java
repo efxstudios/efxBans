@@ -25,7 +25,6 @@ class VersionTest {
             assertThrows(IllegalArgumentException.class, () -> Version.parse(text), text);
     }
 
-    /** The ordering example from semver.org, section 11. */
     @Test
     void followsSemverPrecedence() {
         List<String> ordered = List.of("1.0.0-alpha", "1.0.0-alpha.1", "1.0.0-alpha.beta", "1.0.0-beta", "1.0.0-beta.2", "1.0.0-beta.11",

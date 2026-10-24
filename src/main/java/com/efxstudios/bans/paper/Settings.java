@@ -24,7 +24,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 
-/** Validated, immutable view of config.yml and the selected lang/ file. A reload swaps the whole object at once. */
 public record Settings(DatabaseSettings database, long pollMillis, long staleMillis, boolean publicBroadcast,
                        long defaultMax, Map<String, Long> limits, List<String> muteCommands, Set<String> consolePermissions,
                        Map<String, Preset> presets, Messages messages, Webhook.Settings webhook,
@@ -43,10 +42,8 @@ public record Settings(DatabaseSettings database, long pollMillis, long staleMil
     private static final Set<String> RESERVED = Set.of("ban", "ipban", "mute", "kick", "warn", "unban", "unmute", "history",
             "punishment", "undo", "alts", "efxbans", "banlist", "mutelist", "lookup", "sorgu");
 
-    /** config.yml layout this build writes. Raise it, and add a Step, whenever keys are added, renamed or removed. */
     static final int CONFIG_VERSION = 3;
 
-    /** Sections that belong to the user: the packaged examples are never merged into them. */
     private static final Set<String> USER_OWNED = Set.of("presets");
 
     public static Settings load(BansPlugin plugin) throws Exception {
@@ -105,7 +102,7 @@ public record Settings(DatabaseSettings database, long pollMillis, long staleMil
     private static Map<String, Preset> presets(YamlConfiguration c) {
         Map<String, Preset> presets = new LinkedHashMap<>();
         Set<String> claimed = new HashSet<>(RESERVED);
-        // `presets: {}` or a missing section means no presets; packaged examples are never merged back.
+
         ConfigurationSection section = c.isSet("presets") ? c.getConfigurationSection("presets") : null;
         if (section == null) return presets;
         for (String id : section.getKeys(false)) {
@@ -143,7 +140,6 @@ public record Settings(DatabaseSettings database, long pollMillis, long staleMil
         if (!permission.matches("[a-z0-9_.-]+")) throw new IllegalArgumentException("Invalid permission: " + permission);
     }
 
-    /** Loads config.yml, creating it on first start and migrating it from older layouts. */
     private static YamlConfiguration config(BansPlugin plugin) throws Exception {
         Path data = plugin.getDataFolder().toPath();
         Files.createDirectories(data);
@@ -152,33 +148,27 @@ public record Settings(DatabaseSettings database, long pollMillis, long staleMil
         if (bundled == null) throw new IOException("Bundled resource missing: config.yml");
         String template = ConfigFile.read(bundled);
         if (!Files.exists(file)) Files.writeString(file, template, StandardCharsets.UTF_8);
-        // A config.yml without config-version is the efxBans 1.0 layout.
+
         return ConfigFile.load(file, template, 1, steps(data), USER_OWNED, data.resolve("backups"), plugin.getLogger());
     }
 
-    /**
-     * config.yml migrations. Each step upgrades version N to N + 1; keys that are only new need no step,
-     * because the rebuilt file takes them (with their comments) from the bundled config.yml.
-     */
     static List<ConfigFile.Step> steps(Path data) {
         return List.of(
                 new ConfigFile.Step(1, "language and timezone settings added; /teammsg and /tm are blocked while muted", c -> {
                     ConfigFile.addToList(c, "mute.blocked-commands", "teammsg", "tm");
-                    // 1.0 had only Turkish messages, so existing servers keep Turkish.
+
                     if (!c.isSet("language")) c.set("language", "tr");
                     if (!c.isSet("timezone")) c.set("timezone", legacyTimezone(data));
                 }),
                 new ConfigFile.Step(2, "removed branch-specific integration settings", c -> c.set("integrations", null)));
     }
 
-    /** The timezone used to live in messages.yml. */
     private static String legacyTimezone(Path data) {
         Path messages = data.resolve("messages.yml");
         if (!Files.exists(messages)) return "Europe/Istanbul";
         return YamlConfiguration.loadConfiguration(messages.toFile()).getString("timezone", "Europe/Istanbul");
     }
 
-    /** Enabled preset commands and aliases; a change here needs a restart (Brigadier trees are built once). */
     public Map<String, List<String>> topology() {
         Map<String, List<String>> result = new TreeMap<>();
         presets.values().stream().filter(Preset::enabled).forEach(p -> result.put(p.command(), p.aliases()));

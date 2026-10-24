@@ -47,15 +47,15 @@ class RemovalCommandTest {
                 dispatcher.getRoot().addChild(node);
                 return Set.of(node.getLiteral());
             }).when(registrar).register(any(LiteralCommandNode.class), eq("efxBans"), anyList());
-            new CommandTree(plugin).register(registrar);
+            new CommandTree<>(plugin, CommandSourceStack::getSender).register(new ModernCommands(registrar));
 
             CommandSourceStack source = mock(CommandSourceStack.class);
-            // /sorgu is the pre-1.1 name of /lookup and stays as an alias.
+
             for (String command : List.of("unban Alice", "unmute Alice", "undo #1", "lookup Alice", "sorgu #5")) {
                 var parsed = dispatcher.parse(command, source);
                 assertFalse(parsed.getReader().canRead(), command);
                 assertNotNull(parsed.getContext().getCommand(), command);
-                // A trailing reason is not part of the syntax.
+
                 assertTrue(dispatcher.parse(command + " extra reason", source).getReader().canRead(), command);
             }
         }

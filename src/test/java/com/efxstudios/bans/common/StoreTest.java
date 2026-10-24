@@ -8,7 +8,6 @@ import java.sql.DriverManager;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-/** The store contract on SQLite, plus SQLite-only schema migration. */
 class StoreTest extends StoreContract {
     @TempDir
     Path dir;
@@ -20,7 +19,7 @@ class StoreTest extends StoreContract {
 
     @Override
     void reset() {
-        // A fresh @TempDir per test is already empty.
+
     }
 
     @Test

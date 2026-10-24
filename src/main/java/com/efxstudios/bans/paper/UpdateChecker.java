@@ -7,7 +7,6 @@ import com.google.gson.JsonParser;
 import net.kyori.adventure.text.event.ClickEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 
 import java.io.IOException;
 import java.net.URI;
@@ -20,16 +19,11 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-/**
- * Checks Modrinth's published stable versions for this server's Minecraft version and loader.
- * The anonymous request includes no server/player data. Can be disabled with update-checker.enabled.
- */
 public final class UpdateChecker {
     public static final String PERMISSION = "efxbans.update.notify";
     public static final String PROJECT_URL = "https://modrinth.com/project/efxbans/";
     private static final URI VERSIONS_URL = URI.create("https://api.modrinth.com/v2/project/efxbans/version?include_changelog=false");
 
-    /** The download page is fixed, never taken from the remote response. */
     record Release(Version version, String url) {}
 
     private final BansPlugin plugin;
@@ -39,17 +33,16 @@ public final class UpdateChecker {
     private final AtomicLong generation = new AtomicLong();
     private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).followRedirects(HttpClient.Redirect.NORMAL).build();
     private volatile Release available;
-    private ScheduledTask task;
+    private Runnable task;
     private volatile Settings.Updates active = Settings.Updates.DISABLED;
 
     public UpdateChecker(BansPlugin plugin) {
         this.plugin = plugin;
-        this.current = parse(plugin.getPluginMeta().getVersion()).orElse(null);
-        this.gameVersion = Bukkit.getMinecraftVersion();
+        this.current = parse(plugin.getDescription().getVersion()).orElse(null);
+        this.gameVersion = Platform.minecraftVersion();
         this.loader = folia() ? "folia" : "paper";
     }
 
-    /** (Re)starts or stops the periodic check. Serialized by config loading. */
     public synchronized void configure(Settings.Updates settings) {
         if (settings.equals(active) && (task != null) == settings.enabled()) return;
         stop();
@@ -61,23 +54,22 @@ public final class UpdateChecker {
         }
         long period = TimeUnit.HOURS.toSeconds(settings.intervalHours());
         long revision = generation.get();
-        task = Bukkit.getAsyncScheduler().runAtFixedRate(plugin, ignored -> check(revision), 10, period, TimeUnit.SECONDS);
+        task = plugin.scheduler().repeatAsync(() -> check(revision), 10, period);
     }
 
     public synchronized void stop() {
         generation.incrementAndGet();
-        if (task != null) task.cancel();
+        if (task != null) task.run();
         task = null;
         available = null;
         active = Settings.Updates.DISABLED;
     }
 
-    /** Join notification for staff, if a newer release was found and notify-staff is on. */
     public void notify(Player player) {
         Release release = available;
         if (release == null || !active.enabled() || !active.notifyStaff() || !plugin.permissions().has(player, PERMISSION)) return;
         var messages = plugin.settings().messages();
-        player.sendMessage(messages.render("update.available", Map.of("current", current.toString(), "latest", release.version().toString()))
+        Platform.send(player, messages.render("update.available", Map.of("current", current.toString(), "latest", release.version().toString()))
                 .clickEvent(ClickEvent.openUrl(release.url())));
     }
 
@@ -90,7 +82,7 @@ public final class UpdateChecker {
                 .build();
         try {
             HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
-            // 404: the project has not been published yet.
+
             if (response.statusCode() == 404) return;
             if (response.statusCode() != 200) {
                 plugin.getLogger().fine("Update check: Modrinth answered HTTP " + response.statusCode());
@@ -116,7 +108,6 @@ public final class UpdateChecker {
         plugin.global(() -> Bukkit.getOnlinePlayers().forEach(player -> plugin.player(player, () -> notify(player))));
     }
 
-    /** Selects the highest compatible stable version, regardless of response order. */
     static Optional<Release> newerRelease(String json, Version current, String gameVersion, String loader) {
         JsonElement root = JsonParser.parseString(json);
         if (!root.isJsonArray()) return Optional.empty();

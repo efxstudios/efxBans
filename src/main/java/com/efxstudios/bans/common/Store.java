@@ -18,11 +18,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * JDBC access for SQLite and MySQL. Only called from the {@link Engine} worker thread.
- * Every punishment change is written together with its change-log row in one transaction.
- * All values are bound as parameters; the only concatenated SQL fragments are constants from this class.
- */
 public final class Store implements AutoCloseable {
     public record Profile(UUID uuid, String name, String ip, int exemptions) {}
     public record Change(long sequence, Punishment punishment, String action, String actorName, String reason, long at) {}
@@ -66,8 +61,6 @@ public final class Store implements AutoCloseable {
         }
     }
 
-    // ---------------------------------------------------------------- schema
-
     private void migrate() throws SQLException {
         try (Connection c = pool.getConnection(); Statement s = c.createStatement()) {
             if (!mysql) {
@@ -96,7 +89,7 @@ public final class Store implements AutoCloseable {
                     + " actor_name VARCHAR(64) NOT NULL, reason TEXT NOT NULL, at_time BIGINT NOT NULL)" + engine);
             s.execute("CREATE TABLE IF NOT EXISTS efxb_warning_deliveries (punishment_id BIGINT PRIMARY KEY, target_uuid VARCHAR(36) NOT NULL,"
                     + " delivered_at BIGINT NOT NULL DEFAULT 0)" + engine);
-            // Which records of another plugin were already imported, so an import can be repeated safely.
+
             s.execute("CREATE TABLE IF NOT EXISTS efxb_imports (source VARCHAR(32) NOT NULL, source_id VARCHAR(64) NOT NULL,"
                     + " punishment_id BIGINT NOT NULL, PRIMARY KEY(source,source_id))" + engine);
             addSilentColumn(c, s);
@@ -110,7 +103,6 @@ public final class Store implements AutoCloseable {
         }
     }
 
-    /** Added after the first release; older databases are upgraded in place. */
     private static void addSilentColumn(Connection c, Statement s) throws SQLException {
         boolean exists;
         try (ResultSet columns = c.getMetaData().getColumns(c.getCatalog(), null, "efxb_punishments", "silent")) {
@@ -120,7 +112,7 @@ public final class Store implements AutoCloseable {
         try {
             s.execute("ALTER TABLE efxb_punishments ADD COLUMN silent INTEGER NOT NULL DEFAULT 0");
         } catch (SQLException e) {
-            // Another server sharing the database may have added it at the same moment.
+
             if (e.getErrorCode() != 1060 && !Objects.requireNonNullElse(e.getMessage(), "").contains("duplicate column")) throw e;
         }
     }
@@ -147,8 +139,7 @@ public final class Store implements AutoCloseable {
         try (Connection c = pool.getConnection()) {
             c.setAutoCommit(false);
             try {
-                // Locks the meta row, so commits happen in change-log order.
-                // AUTO_INCREMENT alone is NOT a safe change-feed cursor under concurrent writers.
+
                 try (Statement s = c.createStatement()) {
                     s.executeUpdate("UPDATE efxb_meta SET gate=gate WHERE id=1");
                 }
@@ -162,9 +153,6 @@ public final class Store implements AutoCloseable {
         }
     }
 
-    // ---------------------------------------------------------------- profiles
-
-    /** Records a login: current name, name history and IP history. A null address keeps the stored one. */
     public void remember(UUID uuid, String name, String address, int exemptions) throws SQLException {
         String id = uuid.toString();
         String lower = name.toLowerCase(Locale.ROOT);
@@ -185,13 +173,12 @@ public final class Store implements AutoCloseable {
         });
     }
 
-    /** Finds an account by UUID or current name; a former name is only accepted when it is unambiguous. */
     public Optional<Profile> profile(String nameOrUuid) throws SQLException {
         UUID uuid = null;
         try {
             uuid = UUID.fromString(nameOrUuid);
         } catch (IllegalArgumentException ignored) {
-            // Not a UUID: look it up as a name.
+
         }
         try (Connection c = pool.getConnection()) {
             List<Profile> found;
@@ -216,7 +203,6 @@ public final class Store implements AutoCloseable {
         return result;
     }
 
-    /** Accounts that ever used one of this account's IP addresses (at most 100). */
     public List<Profile> alts(UUID uuid) throws SQLException {
         try (Connection c = pool.getConnection()) {
             return profiles(c, "SELECT DISTINCT p.* FROM efxb_profiles p"
@@ -226,13 +212,10 @@ public final class Store implements AutoCloseable {
         }
     }
 
-    // ---------------------------------------------------------------- punishments
-
     public Punishment issue(Kind kind, UUID target, String name, String ip, String actor, String actorName, String reason, long duration) throws SQLException {
         return issue(kind, target, name, ip, actor, actorName, reason, duration, false);
     }
 
-    /** Duration 0 means permanent for bans/mutes and is required for kicks/warnings. */
     public Punishment issue(Kind kind, UUID target, String name, String ip, String actor, String actorName, String reason, long duration,
                             boolean silent) throws SQLException {
         if (kind != Kind.IPBAN && target == null) throw new Problem("account-required");
@@ -262,7 +245,6 @@ public final class Store implements AutoCloseable {
         });
     }
 
-    /** An account may hold one active punishment per kind; an address-only IP ban is checked per address. */
     private static boolean hasActive(Connection c, Kind kind, UUID target, String ip, long now) throws SQLException {
         String base = "SELECT id FROM efxb_punishments WHERE kind=? AND state='ACTIVE' AND (expires=0 OR expires>?) AND ";
         if (target != null) return exists(c, base + "target_uuid=?", kind.name(), now, target.toString());
@@ -274,11 +256,6 @@ public final class Store implements AutoCloseable {
         return remove(id, uuid, ip, kinds, undo, actor, actorName, reason, true);
     }
 
-    /**
-     * Closes matching punishments: REMOVED for unban/unmute, REVOKED for undo.
-     * A name unban uses target_uuid ONLY; it never expands to other accounts sharing an IP.
-     * Without addressAccess, an #ID that points at an account-less IP ban is refused like a direct IP unban.
-     */
     public List<Punishment> remove(Long id, UUID uuid, String ip, Set<Kind> kinds, boolean undo, String actor, String actorName, String reason,
                                    boolean addressAccess) throws SQLException {
         if (id == null && uuid == null && ip == null) throw new IllegalArgumentException("A target is required.");
@@ -315,14 +292,12 @@ public final class Store implements AutoCloseable {
         return query(c, "SELECT * FROM efxb_punishments WHERE id=?", id).stream().findFirst();
     }
 
-    /** Every punishment of an account, newest first, 10 per page. */
     public List<Punishment> history(UUID uuid, int page) throws SQLException {
         try (Connection c = pool.getConnection()) {
             return query(c, "SELECT * FROM efxb_punishments WHERE target_uuid=? ORDER BY id DESC LIMIT 10 OFFSET ?", uuid.toString(), (long) (page - 1) * 10);
         }
     }
 
-    /** Active bans, IP bans and mutes for one ID, account or recorded IP; 5 per page. */
     public Page inquiry(Long id, UUID uuid, String ip, int requested) throws SQLException {
         String selector = id != null ? "id=?" : uuid != null ? "target_uuid=?" : "ip=?";
         Object value = id != null ? id : uuid != null ? uuid.toString() : ip;
@@ -337,7 +312,6 @@ public final class Store implements AutoCloseable {
         });
     }
 
-    /** Active punishments of the given kinds, newest first, 10 per page. */
     public Page activePage(Set<Kind> kinds, int requested) throws SQLException {
         String placeholders = String.join(",", Collections.nCopies(kinds.size(), "?"));
         List<Object> args = new ArrayList<>();
@@ -377,7 +351,6 @@ public final class Store implements AutoCloseable {
         }
     }
 
-    /** Login check: active punishments of the account, plus IP bans on the connecting address. */
     public List<Punishment> activeFor(UUID uuid, String ip) throws SQLException {
         try (Connection c = pool.getConnection()) {
             return query(c, "SELECT * FROM efxb_punishments WHERE state='ACTIVE' AND (expires=0 OR expires>?)"
@@ -385,16 +358,12 @@ public final class Store implements AutoCloseable {
         }
     }
 
-    // ---------------------------------------------------------------- import
-
-    /** imported: new rows; already: skipped because a previous import stored them; conflicts: skipped, see importBatch. */
     public record ImportResult(int imported, int already, int conflicts) {
         public ImportResult plus(ImportResult other) {
             return new ImportResult(imported + other.imported, already + other.already, conflicts + other.conflicts);
         }
     }
 
-    /** How many of these source IDs are already imported. */
     public int importedCount(String source, List<String> sourceIds) throws SQLException {
         int count = 0;
         try (Connection c = pool.getConnection()) {
@@ -403,12 +372,6 @@ public final class Store implements AutoCloseable {
         return count;
     }
 
-    /**
-     * Stores records from another plugin in one transaction. A record already imported is skipped; an active
-     * record is also skipped when the account (or address) already has an active efxBans punishment of that kind,
-     * since only one may be active at a time. Imported rows go to the change log as IMPORT: they are applied
-     * (banned players are kicked) but not announced. Old warnings are not delivered again.
-     */
     public ImportResult importBatch(String source, List<ImportRecord> records) throws SQLException {
         return transaction(c -> {
             int imported = 0, already = 0, conflicts = 0;
@@ -452,15 +415,12 @@ public final class Store implements AutoCloseable {
         return text.length() <= length ? text : text.substring(0, length);
     }
 
-    // ---------------------------------------------------------------- change feed
-
     public Snapshot snapshot() throws SQLException {
-        // Same lock as writers: active rows and cursor form one coherent snapshot.
+
         return transaction(c -> new Snapshot(cursor(c),
                 query(c, "SELECT * FROM efxb_punishments WHERE state='ACTIVE' AND (expires=0 OR expires>?)", System.currentTimeMillis())));
     }
 
-    /** Up to 500 change-log entries after the given cursor, oldest first. */
     public List<Change> changes(long after) throws SQLException {
         try (Connection c = pool.getConnection()) {
             return changes(c, "SELECT * FROM efxb_changes WHERE id>? ORDER BY id LIMIT 500", after);
@@ -470,7 +430,7 @@ public final class Store implements AutoCloseable {
     private static List<Change> changes(Connection c, String sql, long value) throws SQLException {
         record Row(long id, long punishment, String action, String actor, String reason, long at) {}
         List<Row> rows = new ArrayList<>();
-        // Read all events and close the result set before loading punishments (portable JDBC).
+
         try (PreparedStatement s = prepare(c, sql, value); ResultSet r = s.executeQuery()) {
             while (r.next())
                 rows.add(new Row(r.getLong("id"), r.getLong("punishment_id"), r.getString("action"), r.getString("actor_name"), r.getString("reason"), r.getLong("at_time")));
@@ -486,8 +446,6 @@ public final class Store implements AutoCloseable {
             return r.getLong(1);
         }
     }
-
-    // ---------------------------------------------------------------- JDBC helpers
 
     private static List<Punishment> query(Connection c, String sql, Object... values) throws SQLException {
         List<Punishment> result = new ArrayList<>();

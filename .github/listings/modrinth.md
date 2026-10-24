@@ -1,4 +1,3 @@
-<!-- Replace BANNER_URL with the public URL of your banner image before publishing. -->
 ![efxBans banner](BANNER_URL)
 
 # efxBans
@@ -7,7 +6,7 @@ An **advanced**, **powerful**, and **customizable** punishment plugin for **Mine
 
 [![Paper](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/supported/paper_64h.png)](https://papermc.io/)
 [![Available on Modrinth](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/available/modrinth_64h.png)](https://modrinth.com/project/efxbans/)
-![Java 21+](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/built-with/java21_64h.png)
+![Java](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/built-with/java_64h.png)
 ![Won’t support Spigot](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/unsupported/spigot_64h.png)
 [![Chat with us on Discord](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/social/discord-plural_64h.png)](https://discord.gg/efxstudios)
 
@@ -74,8 +73,8 @@ LiteBans requires MySQL or MariaDB storage. AdvancedBan supports MySQL and its d
 
 ## Getting started
 
-1. Use **Paper 1.20.6+** or a compatible **Folia** build.
-2. Install **Java 21+**, or **Java 25+** for Minecraft 26.x server builds.
+1. Use **Paper 1.16.5–26.3** or a compatible **Folia** build.
+2. Use **Java 16** for 1.16.5, **Java 17** for 1.17–1.19.4, **Java 21+** for 1.20–1.21.11, and **Java 25+** for 26.x. Folia requires the Java version of its server build.
 3. Put the efxBans JAR in your server's `plugins` folder and restart.
 4. Choose your language in `plugins/efxBans/config.yml` and assign staff permissions.
 

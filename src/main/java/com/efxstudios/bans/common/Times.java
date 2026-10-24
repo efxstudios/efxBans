@@ -5,14 +5,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class Times {
-    /** Singular and plural label of one unit, e.g. "hour" / "hours". */
+
     public record Label(String one, String many) {
         String of(long value) {
             return value == 1 ? one : many;
         }
     }
 
-    /** Unit labels for {@link #format}. The defaults match the packaged lang/en.yml. */
     public record Units(Label week, Label day, Label hour, Label minute, Label second) {
         public static final Units DEFAULT = new Units(new Label("week", "weeks"), new Label("day", "days"), new Label("hour", "hours"),
                 new Label("minute", "minutes"), new Label("second", "seconds"));
@@ -22,12 +21,10 @@ public final class Times {
 
     private Times() {}
 
-    /** The first reason word is treated as a duration when it starts with a digit. */
     public static boolean looksLikeDuration(String text) {
         return !text.isEmpty() && Character.isDigit(text.charAt(0));
     }
 
-    /** Parses "30m", "2h", "1d2h" ... into milliseconds. The whole input must match and be positive. */
     public static long parse(String text) {
         Matcher matcher = PART.matcher(text);
         int end = 0;
@@ -56,7 +53,6 @@ public final class Times {
         return format(millis, Units.DEFAULT);
     }
 
-    /** "1 day 2 hours"; partial seconds are rounded up so a running punishment never shows 0. */
     public static String format(long millis, Units labels) {
         if (millis <= 0) return "0 " + labels.second().many();
         long seconds = millis / 1000 + (millis % 1000 == 0 ? 0 : 1);

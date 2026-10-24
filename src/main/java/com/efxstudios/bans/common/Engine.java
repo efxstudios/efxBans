@@ -10,10 +10,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
-/**
- * A single ordered database worker. SQL and cache updates never run on the game thread, and the change
- * feed is polled so several servers sharing one MySQL database see each other's punishments.
- */
 public final class Engine implements AutoCloseable {
     @FunctionalInterface
     public interface Operation<T> {
@@ -31,7 +27,7 @@ public final class Engine implements AutoCloseable {
     private final AtomicBoolean hintQueued = new AtomicBoolean();
     private final Consumer<List<Store.Change>> observer;
     private final Consumer<Throwable> errors;
-    // Only touched by the worker thread (and the constructor before it starts).
+
     private long cursor;
     private long lastErrorLog;
     private volatile long healthyAt;
@@ -53,12 +49,10 @@ public final class Engine implements AutoCloseable {
         worker.scheduleWithFixedDelay(this::poll, pollMillis, pollMillis, TimeUnit.MILLISECONDS);
     }
 
-    /** False once the change feed could not be read for maxAgeMillis: callers then fail closed. */
     public boolean healthy(long maxAgeMillis) {
         return System.currentTimeMillis() - healthyAt < maxAgeMillis;
     }
 
-    /** Queues work on the database thread. Fails fast instead of growing without bound. */
     public <T> CompletableFuture<T> call(Operation<T> operation) {
         if (!capacity.tryAcquire()) return CompletableFuture.failedFuture(new RejectedExecutionException("Database work queue is full."));
         CompletableFuture<T> result = new CompletableFuture<>();
@@ -81,7 +75,6 @@ public final class Engine implements AutoCloseable {
         return result;
     }
 
-    /** Requests an extra poll soon; repeated hints collapse into one. */
     public void hint() {
         if (!hintQueued.compareAndSet(false, true)) return;
         try {
@@ -103,7 +96,7 @@ public final class Engine implements AutoCloseable {
             if (!changes.isEmpty()) {
                 cache.apply(changes);
                 observer.accept(changes);
-                cursor = changes.getLast().sequence();
+                cursor = changes.get(changes.size() - 1).sequence();
             }
             healthyAt = System.currentTimeMillis();
             if (changes.size() == PAGE) hint();

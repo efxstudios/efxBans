@@ -21,10 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * The AdvancedBan and LiteBans readers against tables shaped like the real ones.
- * AdvancedBan's DDL is its own (SQLQuery); LiteBans' follows the columns its web interface reads.
- */
 abstract class ImportSourcesContract {
     static final ImportSources.Defaults DEFAULTS = new ImportSources.Defaults("No reason given", "IP target", "CONSOLE");
     static final UUID ALICE = UUID.fromString("11111111-2222-3333-4444-555555555555");
@@ -36,7 +32,6 @@ abstract class ImportSourcesContract {
 
     abstract Connection open() throws Exception;
 
-    /** DDL for this database. */
     abstract List<String> schema();
 
     @BeforeEach
@@ -58,8 +53,6 @@ abstract class ImportSourcesContract {
         return records.stream().collect(Collectors.toMap(ImportRecord::sourceId, Function.identity()));
     }
 
-    // ---------------------------------------------------------------- AdvancedBan
-
     private void advancedBan(String table, String name, String uuid, String reason, String type, long start, long end) throws Exception {
         try (PreparedStatement s = c.prepareStatement("INSERT INTO " + table + " (name, uuid, reason, operator, punishmentType, start, end, calculation) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
             s.setString(1, name);
@@ -74,7 +67,6 @@ abstract class ImportSourcesContract {
         }
     }
 
-    /** AdvancedBan writes every punishment to both tables and deletes it from Punishments when it ends. */
     private void advancedBanBoth(String name, String uuid, String reason, String type, long start, long end) throws Exception {
         advancedBan("Punishments", name, uuid, reason, type, start, end);
         advancedBan("PunishmentHistory", name, uuid, reason, type, start, end);
@@ -87,12 +79,12 @@ abstract class ImportSourcesContract {
         advancedBanBoth("Alice", alice, "Hacking", "BAN", NOW - HOUR, -1);
         advancedBanBoth("Bob", bob, null, "TEMP_MUTE", NOW - HOUR, NOW + HOUR);
         advancedBanBoth("Alice", "10.0.0.5", "Alt farm", "TEMP_IP_BAN", NOW - HOUR, NOW + HOUR);
-        advancedBan("PunishmentHistory", "Bob", bob, "Old", "TEMP_BAN", NOW - 10 * HOUR, NOW - 5 * HOUR);   // ran out
-        advancedBan("PunishmentHistory", "Bob", bob, "Lifted", "BAN", NOW - 9 * HOUR, -1);              // unbanned
+        advancedBan("PunishmentHistory", "Bob", bob, "Old", "TEMP_BAN", NOW - 10 * HOUR, NOW - 5 * HOUR);
+        advancedBan("PunishmentHistory", "Bob", bob, "Lifted", "BAN", NOW - 9 * HOUR, -1);
         advancedBan("PunishmentHistory", "Bob", bob, "Language", "WARNING", NOW - 8 * HOUR, -1);
         advancedBan("PunishmentHistory", "Bob", bob, "AFK", "KICK", NOW - 7 * HOUR, -1);
         advancedBan("PunishmentHistory", "Bob", bob, "Just a note", "NOTE", NOW - 6 * HOUR, -1);
-        // AdvancedBan without a working UUID lookup stores the lowercase name instead of a UUID.
+
         advancedBanBoth("Carol", "carol", "Name only", "BAN", NOW - HOUR, -1);
         advancedBanBoth("Ghost", "ghost", "Nobody knows", "BAN", NOW - HOUR, -1);
         UUID carol = UUID.randomUUID();
@@ -122,11 +114,9 @@ abstract class ImportSourcesContract {
         assertEquals("REMOVED", records.stream().filter(r -> r.reason().equals("Lifted")).findFirst().orElseThrow().state());
         assertEquals("EXECUTED", records.stream().filter(r -> r.kind() == Kind.WARN).findFirst().orElseThrow().state());
         assertEquals("Moderator", ban.actorName());
-        // Stable IDs: reading twice gives the same records.
+
         assertEquals(byId(records).keySet(), byId(ImportSources.advancedBan(c, NOW, new ImportSources.Defaults("No reason given", "IP target", "CONSOLE", defaults.resolveName()))).keySet());
     }
-
-    // ---------------------------------------------------------------- LiteBans
 
     private void liteBans(String table, long id, UUID uuid, String ip, String reason, long time, long until, boolean active, boolean ipBan,
                           String removedBy, boolean silent) throws Exception {

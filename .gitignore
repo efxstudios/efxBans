@@ -1,7 +1,5 @@
-# Maven build and release output
 /target/
 /dist/
-# Old module outputs, if an IDE still has the previous layout cached.
 **/target/
 dependency-reduced-pom.xml
 .mvn/wrapper/maven-wrapper.jar
@@ -13,8 +11,6 @@ dependency-reduced-pom.xml
 *.hprof
 hs_err_pid*
 replay_pid*
-
-# IDE and editor state
 .idea/
 *.iml
 *.ipr
@@ -29,13 +25,9 @@ bin/
 *.swp
 *.swo
 *~
-
-# Operating system files
 .DS_Store
 Thumbs.db
 desktop.ini
-
-# Local servers, validation data, previews and private notes
 /.runtime/
 /internal/
 /run/
@@ -57,8 +49,6 @@ __pycache__/
 *.pyc
 *.log
 logs/
-
-# Secrets and local databases; bundled defaults under src/main/resources stay tracked.
 .env
 .env.*
 !.env.example
