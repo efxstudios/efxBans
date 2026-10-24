@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 
 ### Added
+- Discord embeds now show player heads, localized action titles, action colors, status, expiry and the punishment ID; reasons occupy a full-width field. Heads are automatic for player targets and are omitted for address-only bans.
+- Folia support: player actions and command callbacks follow their owning regions; background work uses the async scheduler.
+- `/alts` shows banned accounts in red with permission-checked ban lookup links, online accounts in light green and offline accounts in light gray.
 - `/efxbans import <vanilla|litebans|advancedban> [confirm]`: imports bans, IP bans, mutes, warnings and kicks from the vanilla ban lists, LiteBans (MySQL/MariaDB) and AdvancedBan (local storage or MySQL). It previews first, keeps dates, reasons, staff names and lifted/expired state, and can be run again safely: already imported records are skipped. Permission `efxbans.import`.
 - Support for Paper 1.20.6 through 1.21.10 in addition to 1.21.11 and 26.x. The plugin is now compiled against the 1.20.6 API.
 - Languages: English, Turkish, German, Spanish and French in `plugins/efxBans/lang/<code>.yml`, selected with `language` in `config.yml`. Custom files such as `lang/pt_br.yml` work too; missing keys fall back to English.
@@ -16,6 +19,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Usage lines, duration units (singular and plural), Discord field titles and the remaining hard-coded texts moved to the language files.
 
 ### Changed
+- efxCore control chat compatibility is maintained only on the `restamc` branch; the main plugin enforces mutes without an efxCore dependency or integration setting.
+- Standard single-module Maven layout (`src/main`, `src/test`, `target`); development instructions are consolidated in README and the security policy lives in `.github`.
 - The default prefix no longer uses the `<shadow>` tag, which servers before 1.21.4 would show as plain text.
 - The default language is English. Servers upgrading from 1.0 keep Turkish: `messages.yml` becomes `lang/tr.yml` with all customizations and `language` is set to `tr`.
 - `/sorgu` is now `/lookup` with the permission `efxbans.lookup`. `/sorgu` keeps working as an alias, and `efxbans.sorgu` still grants `efxbans.lookup`.
@@ -23,7 +28,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Console log messages are in English.
 - The database query for recently seen names (every 30 seconds) is gone; it was only used for suggestions.
 - List and lookup headers say "Total: 1" instead of "1 records".
-- The JAR shrank from 19 MB to about 290 KB: the SQLite and MySQL drivers are now loaded from Paper's own libraries.
+- The JAR shrank from 19 MB to about 350 KB: the SQLite and MySQL drivers are now loaded from the server's own libraries.
 - The distributed file is now named `efxBans-<version>.jar`.
 
 ### Security

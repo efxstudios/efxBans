@@ -82,5 +82,5 @@ git commit -m "Release $Version"
 git tag -a $tag -m "efxBans $Version"
 
 Write-Host ''
-Write-Host "$tag is ready. JAR: paper/target/efxBans-$Version.jar" -ForegroundColor Green
+Write-Host "$tag is ready. JAR: target/efxBans-$Version.jar" -ForegroundColor Green
 Write-Host 'To publish:  git push origin main --follow-tags'

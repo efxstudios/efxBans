@@ -5,9 +5,7 @@ updates:
     schedule:
       interval: weekly
     ignore:
-      # Compiled against what the oldest supported Paper release ships (see pom.xml); newer versions
-      # would let code use APIs that 1.20.6 servers do not have.
-      - dependency-name: "net.kyori:*"
+      # Compiled against the oldest supported Paper API, including its Adventure dependencies.
       - dependency-name: "io.papermc.paper:paper-api"
     groups:
       test-libraries:

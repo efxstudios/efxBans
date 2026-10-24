@@ -1,12 +1,16 @@
 # efxBans
 
-Punishment management for Paper servers: bans, IP bans, mutes, kicks and warnings. Commands are built on Paper's Brigadier API, so there is no command library to install. If the database can't be reached, players are refused at login instead of being let in unchecked.
+<!-- Copy-ready project descriptions: .github/listings/modrinth.md and .github/listings/spigot.bbcode.
+     Replace BANNER_URL at the top of each listing with your public banner image URL. -->
+
+Punishment management for Paper and Folia servers: bans, IP bans, mutes, kicks and warnings. Commands are built on Paper's Brigadier API, so there is no command library to install. If the database can't be reached, players are refused at login instead of being let in unchecked.
 
 Messages ship in English, Turkish, German, Spanish and French, and every one of them can be edited.
 
 <p>
   <a href="https://papermc.io"><img alt="Supported on Paper" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/supported/paper_vector.svg" height="40"></a>
-  <img alt="Spigot is not supported" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/unsupported/spigot_vector.svg" height="40">
+  <img alt="Won’t support Spigot" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/unsupported/spigot_vector.svg" height="40">
+  <a href="https://discord.gg/efxstudios"><img alt="Chat with us on Discord" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/social/discord-plural_vector.svg" height="40"></a>
   <img alt="Built with Java 21" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/built-with/java21_vector.svg" height="40">
   <img alt="Built with Maven" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/built-with/maven_vector.svg" height="40">
   <a href="https://github.com/efxstudios/efxBans/releases/latest"><img alt="Available on GitHub" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/available/github_vector.svg" height="40"></a>
@@ -15,7 +19,6 @@ Messages ship in English, Turkish, German, Spanish and French, and every one of 
 
 [![CI](https://github.com/efxstudios/efxBans/actions/workflows/ci.yml/badge.svg)](https://github.com/efxstudios/efxBans/actions/workflows/ci.yml)
 [![Latest release](https://img.shields.io/github/v/release/efxstudios/efxBans)](https://github.com/efxstudios/efxBans/releases/latest)
-[![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE)
 
 ## What it does
 
@@ -37,7 +40,9 @@ Messages ship in English, Turkish, German, Spanish and French, and every one of 
 | Paper 1.20.6 – 1.21.11 | 21+ |
 | Paper 26.1 – 26.3 | 25+ |
 
-This version was tested on live servers running Paper 1.20.6, 1.21.1, 1.21.4, 1.21.8, 1.21.10, 1.21.11, 26.1, 26.2 and 26.3. Paper itself is required; Spigot and Bukkit are not supported. Paper forks such as Purpur should work but are not tested.
+The plugin compiles against Paper 1.20.6 and uses the entity, region, global and async schedulers shared by Paper and Folia. Spigot and Bukkit are not supported. Other Paper forks such as Purpur should work but are not tested.
+
+Live command, punishment and `/alts` checks passed on Paper 1.20.6 (Java 21, test clients connected through ViaVersion) and Folia 1.21.11 (Java 25, two region tick threads). Automated tests also pass against the Paper 26.3 API. MySQL verification is a separate CI job; the local checks used SQLite.
 
 After editing the config, `/efxbans reload` is enough. Changing command names, aliases or the database needs a full restart.
 
@@ -60,6 +65,8 @@ After editing the config, `/efxbans reload` is enough. Changing command names, a
 | `/efxbans import <source> [confirm]` | Import from vanilla, LiteBans or AdvancedBan; see [Switching from another plugin](#switching-from-another-plugin) |
 
 Tab completion offers online players; `/unban` offers banned players and `/unmute` muted ones, even when they are offline. Any other name can still be typed.
+
+In `/alts`, accounts with an active ban or IP ban are red, online accounts are light green and offline accounts are light gray. A ban takes precedence over online status. With `efxbans.lookup`, clicking a red name opens that ban's details.
 
 Duration units are `s m h d w` and can be combined: `30m`, `2h`, `7d`, `1d12h`. Without a duration the punishment is permanent, which needs the `.permanent` permission. If the first word of the reason starts with a digit it is read as a duration, so a mistyped duration is rejected instead of silently becoming permanent.
 
@@ -154,7 +161,9 @@ discord:
   include-ip: false
 ```
 
-Only `discord.com` webhook URLs are accepted and mentions are disabled. Errors and rate limits are retried up to three times. If a notification can't be delivered, the punishment still stands.
+Discord notifications include the player's head, a localized action title, a color for the action, punishment status, expiry and the record ID. Reasons use a full-width field. Removal and undo events have their own titles and colors. Head images are loaded by Discord from MCHeads using the account UUID (or a validated player name for offline-mode accounts); address-only bans have no player image.
+
+Only Discord webhook URLs are accepted and mentions are disabled. Errors and rate limits are retried up to three times. If a notification can't be delivered, the punishment still stands.
 
 ## Update checker
 
@@ -205,7 +214,7 @@ database:
     tls: true    # verifies the server certificate and host name
 ```
 
-Install efxBans on every Paper server; there is no Velocity or BungeeCord component. Keep server clocks in sync. The JDBC drivers come with Paper, so keep Paper up to date for driver security fixes.
+Install efxBans on every Paper or Folia server; there is no Velocity or BungeeCord component. Keep server clocks in sync. The JDBC drivers come with the server, so keep it up to date for driver security fixes.
 
 If the database can't be opened, or the punishment cache can't be refreshed for 15 seconds, logins are refused and public chat is paused. This is on purpose: a database outage must not let banned players back in.
 
@@ -218,12 +227,30 @@ If the database can't be opened, or the punishment cache can't be refreshed for 
 
 ## Development
 
-Building, tests, code rules and how to cut a release: [CONTRIBUTING.md](CONTRIBUTING.md). Security issues: [SECURITY.md](SECURITY.md).
+Project-page descriptions: [Modrinth / Markdown](.github/listings/modrinth.md) · [Spigot / BBCode](.github/listings/spigot.bbcode). Both include a banner placeholder and Devin's Badges.
+
+JDK 21+ is required. Maven is downloaded by the wrapper. Security reports: [security policy](.github/SECURITY.md).
 
 ```bash
-./mvnw verify
+./mvnw clean verify       # Windows: .\mvnw.cmd clean verify
 ```
 
-## License
+The server JAR is `target/efxBans-<version>.jar`; `original-*.jar` is a build intermediate.
 
-[GPL-3.0](LICENSE). If you distribute a modified version, you must share its source code under the same license.
+```text
+src/main/java/com/efxstudios/bans/
+  common/                 Database, cache, messages and Discord
+  paper/                  Commands, enforcement, scheduling and integrations
+src/main/resources/       Plugin metadata, configuration and five languages
+src/test/java/            Unit and database contract tests
+.github/                  CI, release workflow, issue templates and security policy
+scripts/                  Release preparation
+```
+
+CI builds with Java 21 and 25, checks newer Paper APIs, and runs the database contracts on MySQL 8.0 and 8.4. Local MySQL tests run only when `EFXBANS_MYSQL_HOST` is set. Use a disposable `efxbans_test` database: the tests drop its tables. Set `EFXBANS_MYSQL_DATABASE`, `EFXBANS_MYSQL_USER` and `EFXBANS_MYSQL_PASSWORD` as needed, then run `./mvnw test -Dtest='MySql*Test'`.
+
+Keep SQL values bound as parameters. Player-facing text belongs in all five language files, and user input must remain unparsed MiniMessage text. Keep database operations on `Engine` and player operations on their entity scheduler. Permission checks must run again after async lookups. Add tests and a changelog entry for behavior changes.
+
+Configuration layout changes require a new `config-version` and migration in `Settings.steps` or `Languages.STEPS`; migration must preserve user values and back up the old file. `presets` belongs entirely to the user and must not be merged with example presets.
+
+To prepare a release from a clean `main` branch, run `./scripts/release.ps1 -Version 1.1.0`. It dates the changelog, builds and tests, then creates a local commit and tag. Review them before pushing with `git push origin main --follow-tags`; the release workflow publishes the JAR and its SHA-256 checksum. Versions follow Semantic Versioning. A version containing a suffix such as `-beta.1` is published as a prerelease.

@@ -51,9 +51,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          cd paper/target
+          cd target
           sha256sum "efxBans-$VERSION.jar" > SHA256SUMS.txt
           flags=""
           case "$VERSION" in *-*) flags="--prerelease" ;; esac
           gh release create "$GITHUB_REF_NAME" "efxBans-$VERSION.jar" SHA256SUMS.txt \
-            --title "efxBans $VERSION" --notes-file ../../notes.md --verify-tag $flags
+            --title "efxBans $VERSION" --notes-file ../notes.md --verify-tag $flags

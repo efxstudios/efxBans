@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, restamc]
   pull_request:
   workflow_dispatch:
 
@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 21: minimum for Paper 1.21.11, 25: required by Paper 26.x
+        # 21: minimum supported JVM, 25: required by Paper 26.x
         java: ['21', '25']
     steps:
       - uses: actions/checkout@v7
@@ -34,7 +34,7 @@ jobs:
         if: matrix.java == '21'
         with:
           name: efxBans-jar
-          path: paper/target/efxBans-*.jar
+          path: target/efxBans-*.jar
           if-no-files-found: error
           retention-days: 14
 

@@ -1,0 +1,227 @@
+# config-version değerini değiştirmeyin; efxBans güncellemeden sonra dosyayı bununla yükseltir.
+config-version: 3
+
+# Bütün mesajlar MiniMessage. Liste veya YAML | ile çok satır kullanabilirsiniz.
+# Güvenli alanlar: {prefix} {player} {staff} {reason} {duration} {remaining} {id}
+# {type} {created} {expires} {status} {closed_at} {closed_by} {close_reason}
+# Duyurularda ek alan: {change_reason}. IP varsayılan mesajlarda gösterilmez.
+prefix: '<b><gradient:#FF5656:#FFB8B8>ᴇꜰxʙᴀɴꜱ</gradient></b> <gray>»'
+# Java DateTimeFormatter biçimi. Saat dilimi config.yml içindeki timezone ayarıdır.
+date-format: 'dd.MM.yyyy HH:mm:ss'
+permanent: Kalıcı
+types:
+  ban: Ban
+  ipban: IP ban
+  mute: Susturma
+  kick: Sunucudan atma
+  warn: Uyarı
+status:
+  ACTIVE: Aktif
+  EXPIRED: Süresi dolmuş
+  REMOVED: Kaldırılmış
+  REVOKED: Geri alınmış
+  EXECUTED: Uygulanmış
+
+error: '{prefix} <#FF5656>{error}'
+errors:
+  player-offline: '{prefix} <#FF5656>{player} <#F2F4FF>çevrimiçi değil. <#009DFF>Kick <#F2F4FF>yalnızca çevrimiçi oyunculara uygulanabilir.'
+  no-permission: '{prefix} <#F2F4FF>Bu işlem için yetkiniz yok: <#009DFF>{permission}'
+  maximum-duration: '{prefix} <#F2F4FF>Maksimum ceza süreniz: <#009DFF>{maximum}'
+  invalid-duration: '{prefix} <#FF5656>Geçersiz süre. <#F2F4FF>Örnek: <#009DFF>30m, 2h, 7d, 1d2h'
+  invalid-reason: '{prefix} <#F2F4FF>Sebep <#009DFF>1–1000 karakter <#F2F4FF>olmalı.'
+  reason-required: '{prefix} <#F2F4FF>Süre sonrası sebep yazın. <#009DFF>{usage}'
+  account-required: '{prefix} <#F2F4FF>Geçerli bir <#009DFF>oyuncu adı <#F2F4FF>yazın.'
+  ambiguous-name: '{prefix} <#F2F4FF>Bu adı birden fazla hesap kullanmış; <#009DFF>oyuncunun güncel adını <#F2F4FF>kullanın.'
+  unknown-ip: '{prefix} <#F2F4FF>Oyuncunun kayıtlı IP adresi yok. <#009DFF>Önce sunucuya giriş yapmış olması gerekir.'
+  duplicate-active: '{prefix} <#F2F4FF>Bu türde <#009DFF>aktif ceza <#F2F4FF>zaten var; önce kaldırın veya geri alın.'
+  preset-disabled: '{prefix} <#F2F4FF>Bu preset kapatıldı veya silindi. <#009DFF>Komut ağacı değişiklikleri <#F2F4FF>için sunucuyu yeniden başlatın.'
+  exempt: '{prefix} <#FF5656>Bu oyuncu bu cezadan muaf.'
+  id-required: '{prefix} <#F2F4FF>Geçerli ceza ID bilgisi yazın: <#009DFF>#123'
+  import-unknown-source: '{prefix} <#F2F4FF>Bilinmeyen kaynak. <#009DFF>vanilla<#F2F4FF>, <#009DFF>litebans <#F2F4FF>veya <#009DFF>advancedban <#F2F4FF>kullanın.'
+  import-no-database: '{prefix} <#FF5656>efxBans veritabanına ulaşılamıyor; içe aktarma yapılamaz.'
+  import-busy: '{prefix} <#F2F4FF>Zaten bir içe aktarma çalışıyor.'
+  import-not-found: '{prefix} <#FF5656>{file} <#F2F4FF>bulunamadı. Eklenti bu sunucuda kurulu mu?'
+  import-unsupported-storage: '{prefix} <#FF5656>{source} verilerini {storage} ile tutuyor; <#F2F4FF>efxBans bunu okuyamaz. Önce {source} eklentisini MySQL veya MariaDB kullanacak şekilde ayarlayın.'
+  import-plugin-required: '{prefix} <#F2F4FF>{plugin} verilerini yerel bir dosyada tutuyor; bu dosya yalnızca <#009DFF>{plugin} çalışırken <#F2F4FF>okunabilir. İçe aktarma bitene kadar eklentiyi kaldırmayın.'
+database-error: '{prefix} <#F2F4FF>İşlem sonucu doğrulanamadı. <#009DFF>Tekrar denemeden önce geçmişi ve veritabanı bağlantısını <#F2F4FF>kontrol edin; mevcut kayıtlar korunuyor.'
+unavailable: '{prefix} <#F2F4FF>Ceza sistemi şu an doğrulama yapamıyor. <#009DFF>Lütfen biraz sonra tekrar deneyin.'
+unknown-player: '{prefix} <#FF5656>{player} <#F2F4FF>hesabı doğrulanamadı. Kayıtlı oyuncu adı kullanın.'
+usage: '{prefix} <#F2F4FF>Kullanım: <#009DFF>{usage}'
+not-found: '{prefix} <#F2F4FF>Bu sorguya uygun <#009DFF>kayıt bulunamadı.'
+# Bu onaylar yalnızca işlemi yapan yetkiliye/konsola gönderilir; duyurulardan ayrıdır.
+confirmation:
+  ban: '{prefix} <#55FF55>{player} yasaklandı.'
+  ipban: '{prefix} <#55FF55>{player} için IP yasağı uygulandı.'
+  mute: '{prefix} <#55FF55>{player} susturuldu.'
+  kick: '{prefix} <#55FF55>{player} sunucudan atıldı.'
+  warn: '{prefix} <#55FF55>{player} uyarıldı.'
+  silent: '{prefix} <#55FF55>{player}: {type} sessizce uygulandı.'
+  unban: '{prefix} <#55FF55>{player} yasağı kaldırıldı.'
+  unmute: '{prefix} <#55FF55>{player} susturması kaldırıldı.'
+  undo: '{prefix} <#55FF55>{player} cezası geri alındı.'
+muted: '{prefix} <#F2F4FF>Sohbet yetkiniz <#FF5656>susturuldu. <#F2F4FF>Sebep: <#009DFF>{reason} <#F2F4FF>• Kalan: <#009DFF>{remaining}'
+muted-notice: '{prefix} <#F2F4FF><#009DFF>{staff} <#F2F4FF>sizi <#009DFF>{reason} <#F2F4FF>sebebiyle <#009DFF>{duration} <#F2F4FF>susturdu.'
+warned: '{prefix} <#009DFF>{staff} <#F2F4FF>size uyarı verdi. Sebep: <#009DFF>{reason}'
+reload: '{prefix} <#F2F4FF>Mesajlar, bildirimler, yetki sınırları ve mevcut preset ayarları <#009DFF>yenilendi.'
+reload-restart: '{prefix} <#F2F4FF>Güvenli ayarlar yenilendi. <#009DFF>Komut adları/alias veya veritabanı değişiklikleri <#F2F4FF>için sunucuyu tamamen yeniden başlatın.'
+health: '{prefix} <#F2F4FF>Durum: <#009DFF>{health} <#F2F4FF>• efxBans {plugin} • Paper {version} • {database}'
+help-header: '{prefix} <#F2F4FF>Ceza yönetimi <#009DFF>• efxBans'
+help-entry: '<#009DFF>{usage}'
+history-header: '{prefix} <#FF5656>{player} <#F2F4FF>ceza geçmişi • Sayfa <#009DFF>{page}'
+history-entry: '<#009DFF>#{id} <#F2F4FF>{type} • <#FF5656>{status} <#F2F4FF>• {created} • <#009DFF>{staff} <#F2F4FF>• {duration}<newline><#F2F4FF>  Sebep: <#009DFF>{reason}'
+detail:
+  - '{prefix} <#009DFF>#{id} <#F2F4FF>• {type} • <#FF5656>{status}'
+  - '<#F2F4FF>Oyuncu: <#FF5656>{player} <#F2F4FF>• Yetkili: <#009DFF>{staff}'
+  - '<#F2F4FF>Sebep: <#009DFF>{reason}'
+  - '<#F2F4FF>Başlangıç: <#009DFF>{created} <#F2F4FF>• Bitiş: <#009DFF>{expires}'
+  - '<#F2F4FF>Süre: <#009DFF>{duration} <#F2F4FF>• Kalan: <#009DFF>{remaining}'
+  - '<#F2F4FF>Kaldıran / geri alan: <#009DFF>{closed_by} <#F2F4FF>• {closed_at}'
+audit-entry: '<gray>{created} <#009DFF>{action} <#F2F4FF>• {staff} • {reason}'
+ip-detail: '{prefix} <#F2F4FF>Özel IP bilgisi: <#009DFF>{ip}'
+alts-header: '{prefix} <#FF5656>{player} <#F2F4FF>ile geçmişte ortak IP kullanan hesaplar. <#009DFF>Bu bağlantı aynı kişi olduklarını kanıtlamaz.'
+# Player names are colored by ban and online status; banned names link to /lookup.
+alts-entry: '{player}'
+
+broadcast:
+  unban: '{prefix} <#009DFF>{staff} <#F2F4FF>adlı yetkili, <#FF5656>{player} <#F2F4FF>oyuncusunun yasağını kaldırdı.'
+  unmute: '{prefix} <#009DFF>{staff} <#F2F4FF>adlı yetkili, <#FF5656>{player} <#F2F4FF>oyuncusunun susturmasını kaldırdı.'
+  ban: '{prefix} <#009DFF>{staff} <#F2F4FF>adlı yetkili, <#FF5656>{player} <#F2F4FF>oyuncusunu <#009DFF>{reason} <#F2F4FF>sebebiyle <#009DFF>{duration} <#F2F4FF>yasakladı.'
+  ipban: '{prefix} <#009DFF>{staff} <#F2F4FF>adlı yetkili, <#FF5656>{player} <#F2F4FF>için <#009DFF>{reason} <#F2F4FF>sebebiyle <#009DFF>{duration} <#F2F4FF>IP yasağı verdi.'
+  mute: '{prefix} <#009DFF>{staff} <#F2F4FF>adlı yetkili, <#FF5656>{player} <#F2F4FF>oyuncusunu <#009DFF>{reason} <#F2F4FF>sebebiyle <#009DFF>{duration} <#F2F4FF>susturdu.'
+  kick: '{prefix} <#009DFF>{staff} <#F2F4FF>adlı yetkili, <#FF5656>{player} <#F2F4FF>oyuncusunu <#009DFF>{reason} <#F2F4FF>sebebiyle sunucudan attı.'
+  warn: '{prefix} <#009DFF>{staff} <#F2F4FF>adlı yetkili, <#FF5656>{player} <#F2F4FF>oyuncusuna <#009DFF>{reason} <#F2F4FF>sebebiyle uyarı verdi.'
+  remove: '{prefix} <#009DFF>{staff} <#F2F4FF>adlı yetkili, <#FF5656>{player} <#F2F4FF>oyuncusunun cezasını kaldırdı.'
+  undo: '{prefix} <#009DFF>{staff} <#F2F4FF>adlı yetkili, <#FF5656>{player} <#F2F4FF>oyuncusunun cezasını geri aldı.'
+
+lists:
+  banlist: '{prefix} <#F2F4FF>Aktif yasaklar <#009DFF>• {total} kayıt • Sayfa {page}/{pages}'
+  mutelist: '{prefix} <#F2F4FF>Aktif susturmalar <#009DFF>• {total} kayıt • Sayfa {page}/{pages}'
+  empty: '<#F2F4FF>Aktif ceza bulunmuyor.'
+  entry: '<#009DFF>#{id} <#FF5656>{player} <#F2F4FF>• {type} • <#009DFF>{remaining} <#F2F4FF>• {reason}'
+  hover: '<#F2F4FF>Yetkili: <#009DFF>{staff}<newline><#F2F4FF>Başlangıç: <#009DFF>{created}<newline><#F2F4FF>Ayrıntıları görmek için tıklayın.'
+  previous: '<#009DFF>« Önceki  '
+  next: '<#009DFF>  Sonraki »'
+  page: '<#F2F4FF>[{page}/{pages}]'
+
+screen:
+  ban-issued:
+    - '{prefix}'
+    - '<#FF5656>Bu sunucudan yasaklandınız.'
+    - '<#F2F4FF>Yetkili: <#009DFF>{staff}'
+    - '<#F2F4FF>Sebep: <#009DFF>{reason}'
+    - '<#F2F4FF>Süre: <#009DFF>{duration}'
+  ipban-issued:
+    - '{prefix}'
+    - '<#FF5656>Hesabınız veya bağlantınız yasaklandı.'
+    - '<#F2F4FF>Yetkili: <#009DFF>{staff}'
+    - '<#F2F4FF>Sebep: <#009DFF>{reason}'
+    - '<#F2F4FF>Süre: <#009DFF>{duration}'
+  ban:
+    - '{prefix}'
+    - '<#FF5656>Bu sunucudan yasaklandınız.'
+    - ''
+    - '<#F2F4FF>Oyuncu: <#FF5656>{player}'
+    - '<#F2F4FF>Yetkili: <#009DFF>{staff}'
+    - '<#F2F4FF>Sebep: <#009DFF>{reason}'
+    - '<#F2F4FF>Süre: <#009DFF>{duration}'
+    - '<#F2F4FF>Kalan: <#009DFF>{remaining}'
+    - '<#F2F4FF>Ceza ID: <#009DFF>#{id}'
+  ipban:
+    - '{prefix}'
+    - '<#FF5656>Hesabınız veya bağlantınız yasaklandı.'
+    - ''
+    - '<#F2F4FF>Yetkili: <#009DFF>{staff}'
+    - '<#F2F4FF>Sebep: <#009DFF>{reason}'
+    - '<#F2F4FF>Süre: <#009DFF>{duration}'
+    - '<#F2F4FF>Kalan: <#009DFF>{remaining}'
+    - '<#F2F4FF>Ceza ID: <#009DFF>#{id}'
+  kick:
+    - '{prefix}'
+    - '<#FF5656>Sunucudan çıkarıldınız.'
+    - '<#F2F4FF>Yetkili: <#009DFF>{staff}'
+    - '<#F2F4FF>Sebep: <#009DFF>{reason}'
+
+# Tıklanınca GitHub sürüm sayfası açılır. Alanlar: {current} {latest}
+update:
+  available: '{prefix} <#F2F4FF>Yeni efxBans sürümü: <#009DFF>{latest} <#F2F4FF>(kurulu: {current}). <#009DFF><u>İndirmek için tıklayın</u>'
+
+# Aşağıdakiler düz metindir; başka mesajların içine olduğu gibi yerleştirilir.
+usages:
+  ban: '/ban [-s] <oyuncu> [süre] <sebep>'
+  ipban: '/ipban [-s] <oyuncu|IP> [süre] <sebep>'
+  mute: '/mute [-s] <oyuncu> [süre] <sebep>'
+  kick: '/kick [-s] <oyuncu> <sebep>'
+  warn: '/warn <oyuncu> <sebep>'
+  unban: '/unban <#ID|oyuncu|IP>'
+  unmute: '/unmute <#ID|oyuncu>'
+  undo: '/undo <#ID>'
+  history: '/history <oyuncu> [sayfa]'
+  punishment: '/punishment <#ID>'
+  lookup: '/lookup <oyuncu|IP|#ID> [sayfa]'
+  banlist: '/banlist [sayfa]'
+  mutelist: '/mutelist [sayfa]'
+  alts: '/alts <oyuncu>'
+  reload: '/efxbans reload'
+  import: '/efxbans import <vanilla|litebans|advancedban> [confirm]'
+  preset: '/{command} <oyuncu>'
+texts:
+  ip-target: IP hedefi
+  no-reason: Sebep belirtilmemiş
+  target-required: 'Oyuncu, IP veya #ID gerekli.'
+  invalid-operation: Geçersiz işlem
+  health-ready: Hazır
+  health-unavailable: Veritabanına erişilemiyor
+# Tekil ve çoğul biçim (Türkçede aynı).
+time-units:
+  week: hafta
+  weeks: hafta
+  day: gün
+  days: gün
+  hour: saat
+  hours: saat
+  minute: dakika
+  minutes: dakika
+  second: saniye
+  seconds: saniye
+hidden: Gizli
+none: '—'
+# Discord embed alan başlıkları
+webhook:
+  player: Oyuncu
+  staff: Yetkili
+  type: Ceza
+  duration: Süre
+  reason: Sebep
+  ip: IP
+  expires: Bitiş
+  status: Durum
+  actions:
+    ban: Oyuncu yasaklandı
+    ipban: IP yasağı uygulandı
+    mute: Oyuncu susturuldu
+    kick: Oyuncu atıldı
+    warn: Uyarı verildi
+    unban: Yasak kaldırıldı
+    unmute: Susturma kaldırıldı
+    undo: Ceza geri alındı
+
+inquiry:
+  header: '{prefix} <#F2F4FF>Aktif cezalar: <#FF5656>{target} <#009DFF>• {total} kayıt'
+  empty: '{prefix} <#F2F4FF>Bu hedef için aktif ceza bulunmuyor.'
+  entry:
+    - '<dark_gray>────────────────────────────────'
+    - '<#F2F4FF>Ceza: <#009DFF>#{id} • {type} <#F2F4FF>• <#FF5656>{status}'
+    - '<#F2F4FF>Oyuncu: <#FF5656>{player}'
+    - '<#F2F4FF>Yetkili: <#009DFF>{staff}'
+    - '<#F2F4FF>Sebep: <#009DFF>{reason}'
+    - '<#F2F4FF>Veriliş: <#009DFF>{created}'
+    - '<#F2F4FF>Süre: <#009DFF>{duration} <#F2F4FF>• Kalan: <#009DFF>{remaining}'
+    - '<#F2F4FF>Bitiş: <#009DFF>{expires}'
+
+# Başka bir ceza eklentisinden içe aktarma. {source}: vanilla, litebans veya advancedban
+import:
+  reading: '{prefix} <#009DFF>{source} <#F2F4FF>okunuyor...'
+  preview: '{prefix} <#F2F4FF>{source}: <#009DFF>{total} <#F2F4FF>kayıt bulundu • ban: {bans} • susturma: {mutes} • uyarı: {warnings} • kick: {kicks} • şu an aktif: <#009DFF>{active} <#F2F4FF>• daha önce aktarılmış: {already}'
+  confirm-hint: '{prefix} <#F2F4FF>Henüz hiçbir şey değiştirilmedi. Aktarmak için <#009DFF>/efxbans import {source} confirm <#F2F4FF>yazın.'
+  done: '{prefix} <#55FF55>{source} içe aktarması tamamlandı. Aktarılan: {imported} • daha önce aktarılmış: {already} • aynı türde aktif cezası olduğu için atlanan: {conflicts}'
+  failed: '{prefix} <#FF5656>{source} içe aktarması başarısız: <#F2F4FF>{error}'

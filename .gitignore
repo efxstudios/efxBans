@@ -1,10 +1,20 @@
-# ---- Build output
-target/
-dist/
+# Maven build and release output
+/target/
+/dist/
+# Old module outputs, if an IDE still has the previous layout cached.
+**/target/
 dependency-reduced-pom.xml
 .mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+*.war
+*.zip
+*.tar.gz
+*.hprof
+hs_err_pid*
+replay_pid*
 
-# ---- IDE
+# IDE and editor state
 .idea/
 *.iml
 *.ipr
@@ -16,23 +26,52 @@ dependency-reduced-pom.xml
 .factorypath
 out/
 bin/
+*.swp
+*.swo
+*~
 
-# ---- OS
+# Operating system files
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# ---- Local test servers, logs and private notes (never public)
-.runtime/
-internal/
-run/
+# Local servers, validation data, previews and private notes
+/.runtime/
+/internal/
+/run/
+/plugins/
+/world/
+/world_nether/
+/world_the_end/
+/server.properties
+/eula.txt
+/ops.json
+/whitelist.json
+/banned-players.json
+/banned-ips.json
+/usercache.json
+/.console_history
+node_modules/
+__pycache__/
+.pytest_cache/
+*.pyc
 *.log
 logs/
 
-# ---- Secrets and local data: real configs may contain database passwords and webhook URLs
+# Secrets and local databases; bundled defaults under src/main/resources stay tracked.
 .env
 .env.*
+!.env.example
+!.env.sample
+*.pem
+*.key
+*.p12
+*.pfx
 *.db
 *.db-wal
 *.db-shm
+*.db-journal
 *.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm

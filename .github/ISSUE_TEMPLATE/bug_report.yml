@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Don't use this form for security issues; see [SECURITY.md](../blob/main/SECURITY.md) for private reporting.
+        Don't use this form for security issues; use [private vulnerability reporting](https://github.com/efxstudios/efxBans/security/advisories/new).
         Remove the database password, webhook URL and IP addresses before sharing logs or config.
   - type: input
     id: version
@@ -18,8 +18,8 @@ body:
   - type: input
     id: server
     attributes:
-      label: Paper and Java version
-      placeholder: Paper 1.21.11 build 120, Java 21
+      label: Server software and Java version
+      placeholder: Paper or Folia 1.21.11, Java 21
     validations:
       required: true
   - type: dropdown
