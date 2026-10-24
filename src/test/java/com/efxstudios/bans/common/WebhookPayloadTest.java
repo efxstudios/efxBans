@@ -62,6 +62,7 @@ class WebhookPayloadTest {
         assertEquals("Yasak", field(embed, "Punishment").get("value").getAsString());
         assertTrue(embed.getAsJsonObject("footer").get("text").getAsString().endsWith("#128"));
         assertEquals(NOW.toString(), embed.get("timestamp").getAsString());
+        assertEquals(6, embed.getAsJsonArray("fields").size()); // No separate status field.
     }
 
     @Test
@@ -80,7 +81,8 @@ class WebhookPayloadTest {
         var ban = embed(payload(settings(false), "remove", punishment(Kind.BAN, PLAYER, "Notch", "REMOVED", 0), ""));
         assertTrue(ban.get("title").getAsString().endsWith("Yasak kaldırıldı"));
         assertEquals("Original reason", field(ban, "Reason").get("value").getAsString());
-        assertEquals("Kaldırıldı", field(ban, "Status").get("value").getAsString());
+        assertTrue(ban.getAsJsonArray("fields").asList().stream()
+                .noneMatch(value -> value.getAsJsonObject().get("name").getAsString().equals("Status")));
         assertEquals(0x57F287, ban.get("color").getAsInt());
         var mute = embed(payload(settings(false), "remove", punishment(Kind.MUTE, PLAYER, "Notch", "REMOVED", 0), ""));
         assertTrue(mute.get("title").getAsString().endsWith("Susturma kaldırıldı"));

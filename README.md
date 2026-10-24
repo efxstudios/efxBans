@@ -158,7 +158,7 @@ discord:
   include-ip: false
 ```
 
-Discord notifications include the player's head, a localized action title, a color for the action, punishment status, expiry and the record ID. Reasons use a full-width field. Removal and undo events have their own titles and colors. Head images are loaded by Discord from MCHeads using the account UUID (or a validated player name for offline-mode accounts); address-only bans have no player image.
+Discord notifications include the player's head, a localized action title, a color for the action, expiry and the record ID. Reasons use a full-width field. Removal and undo events have their own titles and colors. Head images are loaded by Discord from MCHeads using the account UUID (or a validated player name for offline-mode accounts); address-only bans have no player image.
 
 Only Discord webhook URLs are accepted and mentions are disabled. Errors and rate limits are retried up to three times. If a notification can't be delivered, the punishment still stands.
 
@@ -250,6 +250,6 @@ Keep SQL values bound as parameters. Player-facing text belongs in all five lang
 
 Configuration layout changes require a new `config-version` and migration in `Settings.steps` or `Languages.STEPS`; migration must preserve user values and back up the old file. `presets` belongs entirely to the user and must not be merged with example presets.
 
-To prepare a release from a clean `main` branch, run `./scripts/release.ps1 -Version 1.1.0`. It dates the changelog, builds and tests, then creates a local commit and tag. Review them before pushing with `git push origin main --follow-tags`; the release workflow publishes the JAR and its SHA-256 checksum. Versions follow Semantic Versioning. A version containing a suffix such as `-beta.1` is published as a prerelease.
+To prepare a release from a clean `main` branch, run `./scripts/release.ps1 -Version 1.0.0`. It dates the changelog, builds and tests, then creates a local commit and tag. Review them before pushing with `git push origin main --follow-tags`; the release workflow publishes the JAR and its SHA-256 checksum. Versions follow Semantic Versioning. A version containing a suffix such as `-beta.1` is published as a prerelease.
 
 Publish the distribution JAR on Modrinth with its supported Minecraft versions and Paper/Folia loader tags. The in-game update checker uses listed Modrinth releases; the internal GitHub release workflow does not upload files to Modrinth.

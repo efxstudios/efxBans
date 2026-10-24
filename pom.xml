@@ -20,7 +20,7 @@
     </licenses>
 
     <properties>
-        <revision>1.1.0</revision>
+        <revision>1.0.0</revision>
         <!-- Internal repository metadata; update checks use Modrinth. -->
         <github.repository>efxstudios/efxBans</github.repository>
         <maven.compiler.release>21</maven.compiler.release>

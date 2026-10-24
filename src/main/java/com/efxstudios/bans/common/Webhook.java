@@ -78,7 +78,6 @@ public final class Webhook implements AutoCloseable {
             String expires = p.expires() == 0 ? literal(messages.text("permanent", "Permanent"))
                     : "<t:" + p.expires() / 1000 + ":f>\n<t:" + p.expires() / 1000 + ":R>";
             fields.add(field(messages.text("webhook.expires", "Expires"), expires, true));
-            fields.add(field(messages.text("webhook.status", "Status"), literal(messages.text("status." + p.status(now.toEpochMilli()), p.status(now.toEpochMilli()))), true));
         }
         String reason = changeReason == null || changeReason.isBlank() ? p.reason() : changeReason;
         fields.add(field(messages.text("webhook.reason", "Reason"), literal(reason), false));

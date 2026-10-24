@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 
 ### Added
-- Discord embeds now show player heads, localized action titles, action colors, status, expiry and the punishment ID; reasons occupy a full-width field. Heads are automatic for player targets and are omitted for address-only bans.
+- Discord embeds now show player heads, localized action titles, action colors, expiry and the punishment ID; reasons occupy a full-width field. Heads are automatic for player targets and are omitted for address-only bans.
 - Folia support: player actions and command callbacks follow their owning regions; background work uses the async scheduler.
 - `/alts` shows banned accounts in red with permission-checked ban lookup links, online accounts in light green and offline accounts in light gray.
 - `/efxbans import <vanilla|litebans|advancedban> [confirm]`: imports bans, IP bans, mutes, warnings and kicks from the vanilla ban lists, LiteBans (MySQL/MariaDB) and AdvancedBan (local storage or MySQL). It previews first, keeps dates, reasons, staff names and lifted/expired state, and can be run again safely: already imported records are skipped. Permission `efxbans.import`.
