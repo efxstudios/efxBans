@@ -96,6 +96,9 @@ public final class Store implements AutoCloseable {
                     + " actor_name VARCHAR(64) NOT NULL, reason TEXT NOT NULL, at_time BIGINT NOT NULL)" + engine);
             s.execute("CREATE TABLE IF NOT EXISTS efxb_warning_deliveries (punishment_id BIGINT PRIMARY KEY, target_uuid VARCHAR(36) NOT NULL,"
                     + " delivered_at BIGINT NOT NULL DEFAULT 0)" + engine);
+            // Which records of another plugin were already imported, so an import can be repeated safely.
+            s.execute("CREATE TABLE IF NOT EXISTS efxb_imports (source VARCHAR(32) NOT NULL, source_id VARCHAR(64) NOT NULL,"
+                    + " punishment_id BIGINT NOT NULL, PRIMARY KEY(source,source_id))" + engine);
             addSilentColumn(c, s);
             index(c, "efxb_name_idx", "efxb_profiles", "name_lower");
             index(c, "efxb_ip_idx", "efxb_ips", "ip");
@@ -380,6 +383,73 @@ public final class Store implements AutoCloseable {
             return query(c, "SELECT * FROM efxb_punishments WHERE state='ACTIVE' AND (expires=0 OR expires>?)"
                     + " AND (target_uuid=? OR (kind='IPBAN' AND ip=?)) ORDER BY id DESC", System.currentTimeMillis(), uuid.toString(), ip);
         }
+    }
+
+    // ---------------------------------------------------------------- import
+
+    /** imported: new rows; already: skipped because a previous import stored them; conflicts: skipped, see importBatch. */
+    public record ImportResult(int imported, int already, int conflicts) {
+        public ImportResult plus(ImportResult other) {
+            return new ImportResult(imported + other.imported, already + other.already, conflicts + other.conflicts);
+        }
+    }
+
+    /** How many of these source IDs are already imported. */
+    public int importedCount(String source, List<String> sourceIds) throws SQLException {
+        int count = 0;
+        try (Connection c = pool.getConnection()) {
+            for (String id : sourceIds) if (exists(c, "SELECT punishment_id FROM efxb_imports WHERE source=? AND source_id=?", source, id)) count++;
+        }
+        return count;
+    }
+
+    /**
+     * Stores records from another plugin in one transaction. A record already imported is skipped; an active
+     * record is also skipped when the account (or address) already has an active efxBans punishment of that kind,
+     * since only one may be active at a time. Imported rows go to the change log as IMPORT: they are applied
+     * (banned players are kicked) but not announced. Old warnings are not delivered again.
+     */
+    public ImportResult importBatch(String source, List<ImportRecord> records) throws SQLException {
+        return transaction(c -> {
+            int imported = 0, already = 0, conflicts = 0;
+            long now = System.currentTimeMillis();
+            for (ImportRecord r : records) {
+                if (exists(c, "SELECT punishment_id FROM efxb_imports WHERE source=? AND source_id=?", source, r.sourceId())) {
+                    already++;
+                    continue;
+                }
+                if (r.active(now) && hasActive(c, r.kind(), r.target(), r.ip(), now)) {
+                    conflicts++;
+                    continue;
+                }
+                String name = limit(r.name(), 64);
+                if (r.target() != null && !exists(c, "SELECT uuid FROM efxb_profiles WHERE uuid=?", r.target().toString())) {
+                    execute(c, "INSERT INTO efxb_profiles(uuid,name,name_lower,ip,seen,exemptions) VALUES(?,?,?,?,?,0)",
+                            r.target().toString(), name, name.toLowerCase(Locale.ROOT), r.ip(), r.created());
+                    execute(c, "INSERT INTO efxb_names(uuid,name_lower,seen) VALUES(?,?,?)", r.target().toString(), name.toLowerCase(Locale.ROOT), r.created());
+                }
+                long id;
+                try (PreparedStatement s = c.prepareStatement("INSERT INTO efxb_punishments(kind,target_uuid,target_name,ip,actor,actor_name,reason,"
+                        + "created,expires,state,closed_at,closed_name,silent) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS)) {
+                    bind(s, r.kind().name(), r.target() == null ? null : r.target().toString(), name, r.ip(), "IMPORT", limit(r.actorName(), 64),
+                            limit(r.reason(), 1000), r.created(), r.expires(), r.state(), r.closedAt(), r.closedName() == null ? null : limit(r.closedName(), 64),
+                            r.silent() ? 1 : 0);
+                    s.executeUpdate();
+                    try (ResultSet keys = s.getGeneratedKeys()) {
+                        if (!keys.next()) throw new SQLException("No punishment ID was generated.");
+                        id = keys.getLong(1);
+                    }
+                }
+                execute(c, "INSERT INTO efxb_imports(source,source_id,punishment_id) VALUES(?,?,?)", source, r.sourceId(), id);
+                change(c, id, "IMPORT", limit(r.actorName(), 64), "", now);
+                imported++;
+            }
+            return new ImportResult(imported, already, conflicts);
+        });
+    }
+
+    private static String limit(String text, int length) {
+        return text.length() <= length ? text : text.substring(0, length);
     }
 
     // ---------------------------------------------------------------- change feed

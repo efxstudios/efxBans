@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 
 ### Added
+- `/efxbans import <vanilla|litebans|advancedban> [confirm]`: imports bans, IP bans, mutes, warnings and kicks from the vanilla ban lists, LiteBans (MySQL/MariaDB) and AdvancedBan (local storage or MySQL). It previews first, keeps dates, reasons, staff names and lifted/expired state, and can be run again safely: already imported records are skipped. Permission `efxbans.import`.
+- Support for Paper 1.20.6 through 1.21.10 in addition to 1.21.11 and 26.x. The plugin is now compiled against the 1.20.6 API.
 - Languages: English, Turkish, German, Spanish and French in `plugins/efxBans/lang/<code>.yml`, selected with `language` in `config.yml`. Custom files such as `lang/pt_br.yml` work too; missing keys fall back to English.
 - Config versioning: `config.yml` and the language files start with `config-version`. After an update, outdated files are backed up to `backups/`, migrated (renamed keys, changed defaults) and completed with new keys and their comments, keeping existing values. Files from a newer version are refused.
 - `timezone` and `date-format` settings for dates in messages.
@@ -14,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Usage lines, duration units (singular and plural), Discord field titles and the remaining hard-coded texts moved to the language files.
 
 ### Changed
+- The default prefix no longer uses the `<shadow>` tag, which servers before 1.21.4 would show as plain text.
 - The default language is English. Servers upgrading from 1.0 keep Turkish: `messages.yml` becomes `lang/tr.yml` with all customizations and `language` is set to `tr`.
 - `/sorgu` is now `/lookup` with the permission `efxbans.lookup`. `/sorgu` keeps working as an alias, and `efxbans.sorgu` still grants `efxbans.lookup`.
 - New installs get English example presets (`cheating`, `advertising`, `swearing`, `spam`); existing presets are not touched.

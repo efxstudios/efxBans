@@ -1,7 +1,7 @@
 name: efxBans
 version: '${project.version}'
 main: com.efxstudios.bans.paper.BansPlugin
-api-version: '1.21.11'
+api-version: '1.20.6'
 authors: [efx1st]
 description: Punishment management for Paper servers
 website: https://efxstudios.com
@@ -50,6 +50,7 @@ permissions:
   efxbans.notify: {default: op}
   efxbans.reload: {default: op}
   efxbans.admin: {default: op}
+  efxbans.import: {default: op}
   efxbans.update.notify: {default: op}
   efxbans.duration.unlimited: {default: false}
   efxbans.bypass.exempt: {default: false}

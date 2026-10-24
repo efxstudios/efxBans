@@ -15,7 +15,7 @@ import java.util.Objects;
 @EnabledIfEnvironmentVariable(named = "EFXBANS_MYSQL_HOST", matches = ".+")
 class MySqlStoreTest extends StoreContract {
     private static final String[] TABLES = {"efxb_meta", "efxb_profiles", "efxb_names", "efxb_ips", "efxb_punishments", "efxb_changes",
-            "efxb_warning_deliveries"};
+            "efxb_warning_deliveries", "efxb_imports"};
 
     private static String env(String name, String fallback) {
         return Objects.requireNonNullElse(System.getenv(name), fallback);

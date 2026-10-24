@@ -4,6 +4,8 @@
 
 JDK 21 or newer is all you need. Maven doesn't have to be installed; the repository includes the Maven Wrapper.
 
+The build compiles against the oldest supported Paper API (1.20.6, with the Adventure version it ships), so code can't accidentally use something older servers lack. Dependabot is told not to raise those two. CI also builds and tests against Paper 1.21.11 and 26.3.
+
 ```bash
 ./mvnw verify          # Linux / macOS
 .\mvnw.cmd verify      # Windows
@@ -11,7 +13,7 @@ JDK 21 or newer is all you need. Maven doesn't have to be installed; the reposit
 
 The JAR for the server is `paper/target/efxBans-<version>.jar`. Don't put `original-*.jar` or the `common` module's JAR on a server.
 
-To compile against the Paper 26.x API (needs JDK 25):
+To check against a newer Paper API, e.g. 26.x (needs JDK 25):
 
 ```bash
 ./mvnw verify -Dpaper.version=26.3.build.214-stable -Dmaven.compiler.release=25

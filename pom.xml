@@ -31,9 +31,13 @@
         <github.repository>efxstudios/efxBans</github.repository>
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <paper.version>1.21.11-R0.1-SNAPSHOT</paper.version>
-        <adventure.version>4.25.0</adventure.version>
+        <!-- Oldest supported Paper API: compiling against it proves no newer API is used. -->
+        <paper.version>1.20.6-R0.1-SNAPSHOT</paper.version>
+        <!-- The Adventure version bundled with that Paper release. -->
+        <adventure.version>4.17.0</adventure.version>
         <mockito.version>5.20.0</mockito.version>
+        <sqlite.version>3.49.1.0</sqlite.version>
+        <mysql.version>9.7.0</mysql.version>
     </properties>
 
     <repositories>

@@ -5,7 +5,7 @@ config-version: 1
 # Güvenli alanlar: {prefix} {player} {staff} {reason} {duration} {remaining} {id}
 # {type} {created} {expires} {status} {closed_at} {closed_by} {close_reason}
 # Duyurularda ek alan: {change_reason}. IP varsayılan mesajlarda gösterilmez.
-prefix: '<b><gradient:#FF5656:#FFB8B8><shadow:#000000:1>ᴇꜰxʙᴀɴꜱ</shadow></gradient></b> <gray>»'
+prefix: '<b><gradient:#FF5656:#FFB8B8>ᴇꜰxʙᴀɴꜱ</gradient></b> <gray>»'
 # Java DateTimeFormatter biçimi. Saat dilimi config.yml içindeki timezone ayarıdır.
 date-format: 'dd.MM.yyyy HH:mm:ss'
 permanent: Kalıcı
@@ -37,6 +37,12 @@ errors:
   preset-disabled: '{prefix} <#F2F4FF>Bu preset kapatıldı veya silindi. <#009DFF>Komut ağacı değişiklikleri <#F2F4FF>için sunucuyu yeniden başlatın.'
   exempt: '{prefix} <#FF5656>Bu oyuncu bu cezadan muaf.'
   id-required: '{prefix} <#F2F4FF>Geçerli ceza ID bilgisi yazın: <#009DFF>#123'
+  import-unknown-source: '{prefix} <#F2F4FF>Bilinmeyen kaynak. <#009DFF>vanilla<#F2F4FF>, <#009DFF>litebans <#F2F4FF>veya <#009DFF>advancedban <#F2F4FF>kullanın.'
+  import-no-database: '{prefix} <#FF5656>efxBans veritabanına ulaşılamıyor; içe aktarma yapılamaz.'
+  import-busy: '{prefix} <#F2F4FF>Zaten bir içe aktarma çalışıyor.'
+  import-not-found: '{prefix} <#FF5656>{file} <#F2F4FF>bulunamadı. Eklenti bu sunucuda kurulu mu?'
+  import-unsupported-storage: '{prefix} <#FF5656>{source} verilerini {storage} ile tutuyor; <#F2F4FF>efxBans bunu okuyamaz. Önce {source} eklentisini MySQL veya MariaDB kullanacak şekilde ayarlayın.'
+  import-plugin-required: '{prefix} <#F2F4FF>{plugin} verilerini yerel bir dosyada tutuyor; bu dosya yalnızca <#009DFF>{plugin} çalışırken <#F2F4FF>okunabilir. İçe aktarma bitene kadar eklentiyi kaldırmayın.'
 database-error: '{prefix} <#F2F4FF>İşlem sonucu doğrulanamadı. <#009DFF>Tekrar denemeden önce geçmişi ve veritabanı bağlantısını <#F2F4FF>kontrol edin; mevcut kayıtlar korunuyor.'
 unavailable: '{prefix} <#F2F4FF>Ceza sistemi şu an doğrulama yapamıyor. <#009DFF>Lütfen biraz sonra tekrar deneyin.'
 unknown-player: '{prefix} <#FF5656>{player} <#F2F4FF>hesabı doğrulanamadı. Kayıtlı oyuncu adı kullanın.'
@@ -155,9 +161,11 @@ usages:
   mutelist: '/mutelist [sayfa]'
   alts: '/alts <oyuncu>'
   reload: '/efxbans reload'
+  import: '/efxbans import <vanilla|litebans|advancedban> [confirm]'
   preset: '/{command} <oyuncu>'
 texts:
   ip-target: IP hedefi
+  no-reason: Sebep belirtilmemiş
   target-required: 'Oyuncu, IP veya #ID gerekli.'
   invalid-operation: Geçersiz işlem
   health-ready: Hazır
@@ -197,3 +205,11 @@ inquiry:
     - '<#F2F4FF>Veriliş: <#009DFF>{created}'
     - '<#F2F4FF>Süre: <#009DFF>{duration} <#F2F4FF>• Kalan: <#009DFF>{remaining}'
     - '<#F2F4FF>Bitiş: <#009DFF>{expires}'
+
+# Başka bir ceza eklentisinden içe aktarma. {source}: vanilla, litebans veya advancedban
+import:
+  reading: '{prefix} <#009DFF>{source} <#F2F4FF>okunuyor...'
+  preview: '{prefix} <#F2F4FF>{source}: <#009DFF>{total} <#F2F4FF>kayıt bulundu • ban: {bans} • susturma: {mutes} • uyarı: {warnings} • kick: {kicks} • şu an aktif: <#009DFF>{active} <#F2F4FF>• daha önce aktarılmış: {already}'
+  confirm-hint: '{prefix} <#F2F4FF>Henüz hiçbir şey değiştirilmedi. Aktarmak için <#009DFF>/efxbans import {source} confirm <#F2F4FF>yazın.'
+  done: '{prefix} <#55FF55>{source} içe aktarması tamamlandı. Aktarılan: {imported} • daha önce aktarılmış: {already} • aynı türde aktif cezası olduğu için atlanan: {conflicts}'
+  failed: '{prefix} <#FF5656>{source} içe aktarması başarısız: <#F2F4FF>{error}'

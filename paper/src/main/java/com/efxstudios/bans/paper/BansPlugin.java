@@ -203,6 +203,14 @@ public final class BansPlugin extends JavaPlugin {
         main(() -> {
             for (Store.Change change : changes) {
                 Punishment p = change.punishment();
+                if (change.action().equals("IMPORT")) {
+                    // Imported from another plugin: applied quietly, never announced.
+                    if ((p.kind() == Kind.BAN || p.kind() == Kind.IPBAN) && p.active(System.currentTimeMillis()))
+                        for (Player player : Bukkit.getOnlinePlayers())
+                            if (p.matches(player.getUniqueId(), address(player)))
+                                player.kick(settings.messages().render("screen." + p.kind().key(), settings.messages().values(p)));
+                    continue;
+                }
                 Map<String, String> values = settings.messages().values(p);
                 values.put("staff", change.actorName());
                 values.put("change_reason", change.reason());

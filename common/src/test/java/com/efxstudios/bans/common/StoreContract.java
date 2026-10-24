@@ -266,6 +266,38 @@ abstract class StoreContract {
         assertEquals(mute.id(), cache.find(a, null, Set.of(Kind.MUTE)).orElseThrow().id());
     }
 
+    static ImportRecord imported(String id, Kind kind, UUID target, String ip, long expires, String state) {
+        return new ImportRecord(id, kind, target, target == null ? "IP target" : "Imported", ip, "OldStaff", "Old reason",
+                System.currentTimeMillis() - 60_000, expires, state, 0, null, false);
+    }
+
+    @Test
+    void importIsRepeatableAndKeepsOneActivePunishmentPerKind() throws Exception {
+        UUID c = UUID.randomUUID();
+        long future = System.currentTimeMillis() + 3_600_000;
+        long cursor = store.snapshot().cursor();
+        var existing = issue(Kind.BAN, a, null, 0);
+        List<ImportRecord> batch = List.of(
+                imported("bans:1", Kind.BAN, c, null, future, "ACTIVE"),
+                imported("bans:2", Kind.BAN, a, null, 0, "ACTIVE"),          // a already has an active efxBans ban
+                imported("bans:3", Kind.BAN, a, null, 0, "REMOVED"),         // history is always kept
+                imported("bans:4", Kind.IPBAN, null, "10.1.2.3", 0, "ACTIVE"),
+                imported("warnings:1", Kind.WARN, c, null, 0, "EXECUTED"));
+
+        assertEquals(new Store.ImportResult(4, 0, 1), store.importBatch("test", batch));
+        assertEquals(new Store.ImportResult(0, 4, 1), store.importBatch("test", batch));
+        assertEquals(3, store.importedCount("test", List.of("bans:1", "bans:3", "bans:4", "bans:9")));
+
+        assertEquals("Imported", store.profile(c.toString()).orElseThrow().name());
+        assertEquals(1, store.activeFor(c, null).size());
+        assertEquals(1, store.activeFor(UUID.randomUUID(), "10.1.2.3").size());
+        assertEquals(existing.id(), store.activeFor(a, null).getFirst().id());
+        assertEquals(2, store.history(a, 1).size());
+        assertTrue(store.pendingWarnings(c).isEmpty(), "old warnings are not delivered again");
+        assertTrue(store.changes(cursor).stream().filter(ch -> ch.punishment().id() != existing.id()).allMatch(ch -> ch.action().equals("IMPORT")));
+        assertEquals("Old reason", store.activeFor(c, null).getFirst().reason());
+    }
+
     @Test
     void userTextIsStoredLiterally() throws Exception {
         String reason = "'; DROP TABLE efxb_punishments; -- <red>{player}</red> ğüşiöç 🙂";

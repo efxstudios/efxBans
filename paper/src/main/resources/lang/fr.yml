@@ -5,7 +5,7 @@ config-version: 1
 # Variables : {prefix} {player} {staff} {reason} {duration} {remaining} {id}
 # {type} {created} {expires} {status} {closed_at} {closed_by} {close_reason}
 # Les annonces ont aussi {change_reason}. L'IP n'apparaît dans aucun message par défaut.
-prefix: '<b><gradient:#FF5656:#FFB8B8><shadow:#000000:1>ᴇꜰxʙᴀɴꜱ</shadow></gradient></b> <gray>»'
+prefix: '<b><gradient:#FF5656:#FFB8B8>ᴇꜰxʙᴀɴꜱ</gradient></b> <gray>»'
 # Format Java DateTimeFormatter. Le fuseau horaire se règle dans config.yml.
 date-format: 'dd/MM/yyyy HH:mm:ss'
 permanent: Permanent
@@ -37,6 +37,12 @@ errors:
   preset-disabled: '{prefix} <#F2F4FF>Ce preset a été désactivé ou supprimé. <#009DFF>Redémarrez le serveur <#F2F4FF>pour mettre à jour l''arbre des commandes.'
   exempt: '{prefix} <#FF5656>Ce joueur est exempté de cette sanction.'
   id-required: '{prefix} <#F2F4FF>Saisissez un ID de sanction valide : <#009DFF>#123'
+  import-unknown-source: '{prefix} <#F2F4FF>Source inconnue. Utilisez <#009DFF>vanilla<#F2F4FF>, <#009DFF>litebans <#F2F4FF>ou <#009DFF>advancedban<#F2F4FF>.'
+  import-no-database: '{prefix} <#FF5656>La base de données d''efxBans est indisponible ; rien ne peut être importé.'
+  import-busy: '{prefix} <#F2F4FF>Une importation est déjà en cours.'
+  import-not-found: '{prefix} <#FF5656>{file} <#F2F4FF>est introuvable. Le plugin est-il installé sur ce serveur ?'
+  import-unsupported-storage: '{prefix} <#FF5656>{source} utilise {storage}, <#F2F4FF>qu''efxBans ne peut pas lire. Passez d''abord {source} sur MySQL ou MariaDB.'
+  import-plugin-required: '{prefix} <#F2F4FF>{plugin} stocke ses données dans un fichier local lisible uniquement <#009DFF>pendant que {plugin} tourne<#F2F4FF>. Gardez-le installé jusqu''à la fin de l''importation.'
 database-error: '{prefix} <#F2F4FF>Le résultat n''a pas pu être confirmé. <#009DFF>Vérifiez l''historique et la connexion à la base de données <#F2F4FF>avant de réessayer ; les enregistrements existants sont conservés.'
 unavailable: '{prefix} <#F2F4FF>Le système de sanctions ne peut rien vérifier pour le moment. <#009DFF>Réessayez dans un instant.'
 unknown-player: '{prefix} <#FF5656>{player} <#F2F4FF>n''a pas pu être vérifié. Utilisez le nom d''un joueur connu.'
@@ -155,9 +161,11 @@ usages:
   mutelist: '/mutelist [page]'
   alts: '/alts <joueur>'
   reload: '/efxbans reload'
+  import: '/efxbans import <vanilla|litebans|advancedban> [confirm]'
   preset: '/{command} <joueur>'
 texts:
   ip-target: Cible IP
+  no-reason: Aucune raison indiquée
   target-required: 'Un joueur, une IP ou un #ID est requis.'
   invalid-operation: Opération invalide
   health-ready: Prêt
@@ -197,3 +205,11 @@ inquiry:
     - '<#F2F4FF>Appliquée : <#009DFF>{created}'
     - '<#F2F4FF>Durée : <#009DFF>{duration} <#F2F4FF>• Restant : <#009DFF>{remaining}'
     - '<#F2F4FF>Fin : <#009DFF>{expires}'
+
+# Importation depuis un autre plugin de sanctions. {source} : vanilla, litebans ou advancedban
+import:
+  reading: '{prefix} <#F2F4FF>Lecture de <#009DFF>{source}<#F2F4FF>...'
+  preview: '{prefix} <#F2F4FF>{source} : <#009DFF>{total} <#F2F4FF>trouvés • bannissements : {bans} • mutes : {mutes} • avertissements : {warnings} • expulsions : {kicks} • actifs : <#009DFF>{active} <#F2F4FF>• déjà importés : {already}'
+  confirm-hint: '{prefix} <#F2F4FF>Rien n''a encore été modifié. Lancez <#009DFF>/efxbans import {source} confirm <#F2F4FF>pour importer.'
+  done: '{prefix} <#55FF55>Importation depuis {source} terminée. Importés : {imported} • déjà importés : {already} • ignorés car une sanction active de ce type existe : {conflicts}'
+  failed: '{prefix} <#FF5656>L''importation depuis {source} a échoué : <#F2F4FF>{error}'

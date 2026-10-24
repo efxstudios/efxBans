@@ -56,16 +56,20 @@ public final class CommandTree {
     /** Built-in commands in help order; usage text comes from the language file (usages.*). */
     private static final List<String> COMMANDS = List.of("ban", "ipban", "mute", "kick", "warn", "unban", "unmute", "undo",
             "history", "punishment", "lookup", "banlist", "mutelist", "alts");
+    /** Admin subcommands with their own usage line (usages.*), not root commands. */
+    private static final List<String> SUBCOMMANDS = List.of("import");
     /** Built-in aliases, kept for servers upgrading from releases where these were the command names. */
     private static final Map<String, List<String>> ALIASES = Map.of("lookup", List.of("sorgu"));
     private static final List<String> DURATION_SUGGESTIONS = List.of("30m", "2h", "1d", "7d", "30d");
 
     private final BansPlugin plugin;
     private final Permissions permissions;
+    private final Importer importer;
 
     public CommandTree(BansPlugin plugin) {
         this.plugin = plugin;
         this.permissions = plugin.permissions();
+        this.importer = new Importer(plugin);
     }
 
     // ---------------------------------------------------------------- registration
@@ -154,6 +158,16 @@ public final class CommandTree {
                     permissions.require(sender(c), "efxbans.reload");
                     plugin.reload(sender(c));
                 })));
+        admin.then(Commands.literal("import")
+                .requires(s -> permissions.has(s.getSender(), "efxbans.import"))
+                .executes(c -> usage(c, "import"))
+                .then(Commands.argument("source", StringArgumentType.word())
+                        .suggests((c, b) -> {
+                            Importer.SOURCES.stream().filter(s -> s.startsWith(b.getRemainingLowerCase())).forEach(b::suggest);
+                            return b.buildFuture();
+                        })
+                        .executes(c -> run(c, () -> startImport(c, false)))
+                        .then(Commands.literal("confirm").executes(c -> run(c, () -> startImport(c, true))))));
         admin.then(Commands.literal("status")
                 .requires(s -> permissions.has(s.getSender(), "efxbans.admin"))
                 .executes(c -> run(c, () -> status(sender(c)))));
@@ -507,6 +521,11 @@ public final class CommandTree {
                 "database", plugin.settings().database().type()));
     }
 
+    private void startImport(CommandContext<CommandSourceStack> c, boolean confirm) {
+        permissions.require(sender(c), "efxbans.import");
+        importer.run(sender(c), StringArgumentType.getString(c, "source"), confirm);
+    }
+
     private boolean canPreset(CommandSender sender, String label) {
         var p = plugin.settings().presets().get(label);
         if (p == null || !p.enabled() || !permissions.has(sender, p.permission())) return false;
@@ -519,7 +538,7 @@ public final class CommandTree {
     }
 
     private boolean canAdmin(CommandSender sender) {
-        return List.of("reload", "admin", "history", "unban", "unmute", "undo", "alts", "banlist", "mutelist", "lookup").stream()
+        return List.of("reload", "admin", "history", "unban", "unmute", "undo", "alts", "banlist", "mutelist", "lookup", "import").stream()
                 .anyMatch(p -> permissions.has(sender, "efxbans." + p))
                 || Arrays.stream(Kind.values()).anyMatch(k -> permissions.canIssue(sender, k));
     }
@@ -537,6 +556,7 @@ public final class CommandTree {
         for (var p : plugin.settings().presets().values())
             if (canPreset(sender, p.command())) plugin.tell(sender, "help-entry", Map.of("usage", usageText(p.command())));
         if (permissions.has(sender, "efxbans.reload")) plugin.tell(sender, "help-entry", Map.of("usage", messages().text("usages.reload", "/efxbans reload")));
+        if (permissions.has(sender, "efxbans.import")) plugin.tell(sender, "help-entry", Map.of("usage", usageText("import")));
         return 1;
     }
 
@@ -547,7 +567,7 @@ public final class CommandTree {
 
     /** Built-in commands have their own line; presets share usages.preset. Inserted as literal text. */
     private String usageText(String label) {
-        if (COMMANDS.contains(label)) return messages().text("usages." + label, "/" + label);
+        if (COMMANDS.contains(label) || SUBCOMMANDS.contains(label)) return messages().text("usages." + label, "/" + label);
         return messages().text("usages.preset", "/{command} <player>").replace("{command}", label);
     }
 

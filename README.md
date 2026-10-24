@@ -34,10 +34,10 @@ Messages ship in English, Turkish, German, Spanish and French, and every one of 
 
 | Server | Java |
 | --- | --- |
-| Paper 1.21.11 | 21+ |
+| Paper 1.20.6 – 1.21.11 | 21+ |
 | Paper 26.1 – 26.3 | 25+ |
 
-Paper itself is required; Spigot and Bukkit are not supported. Paper forks such as Purpur should work but are not tested.
+This version was tested on live servers running Paper 1.20.6, 1.21.1, 1.21.4, 1.21.8, 1.21.10, 1.21.11, 26.1, 26.2 and 26.3. Paper itself is required; Spigot and Bukkit are not supported. Paper forks such as Purpur should work but are not tested.
 
 After editing the config, `/efxbans reload` is enough. Changing command names, aliases or the database needs a full restart.
 
@@ -57,6 +57,7 @@ After editing the config, `/efxbans reload` is enough. Changing command names, a
 | `/banlist` · `/mutelist` | Active punishments, with clickable pages |
 | `/alts <player>` | Accounts that used the same IP in the past |
 | `/efxbans help\|status\|reload` | Help, status, reload settings |
+| `/efxbans import <source> [confirm]` | Import from vanilla, LiteBans or AdvancedBan; see [Switching from another plugin](#switching-from-another-plugin) |
 
 Tab completion offers online players; `/unban` offers banned players and `/unmute` muted ones, even when they are offline. Any other name can still be typed.
 
@@ -79,6 +80,7 @@ Duration units are `s m h d w` and can be combined: `30m`, `2h`, `7d`, `1d12h`. 
 | `efxbans.notify` | Staff announcements |
 | `efxbans.update.notify` | New version notice |
 | `efxbans.reload`, `efxbans.admin` | Reload and status |
+| `efxbans.import` | `/efxbans import` |
 | `efxbans.exempt.<kind>`, `efxbans.exempt.all` | Protects the account from being punished with that kind (off by default) |
 | `efxbans.bypass.exempt` | Punish exempt accounts anyway (off by default) |
 | `efxbans.duration.unlimited` | Removes the duration limit and nothing else (off by default) |
@@ -165,6 +167,26 @@ update-checker:
   interval-hours: 12
 ```
 
+## Switching from another plugin
+
+```text
+/efxbans import vanilla              # banned-players.json and banned-ips.json
+/efxbans import advancedban
+/efxbans import litebans
+```
+
+The first run only reads the source and shows what it found; nothing is changed until you add `confirm`. Running it again later skips everything that was already imported, so you can import once more right before you remove the old plugin. Imported punishments keep their reasons, dates, staff names and active or lifted state, and players banned by the old plugin are kicked if they are online. Nothing is announced.
+
+| Source | What is imported | Requirements |
+| --- | --- | --- |
+| `vanilla` | Bans and IP bans from `banned-players.json` and `banned-ips.json` | None |
+| `advancedban` | Bans, IP bans, mutes, warnings and kicks, active and past | Its default local storage is read through AdvancedBan itself, so keep it installed and enabled until the import is done. MySQL storage needs nothing extra. |
+| `litebans` | Bans, IP bans, mutes, warnings and kicks, active and past | LiteBans must use MySQL or MariaDB. Its default H2 file can't be read by efxBans; switch LiteBans to MySQL first. |
+
+LiteBans is a paid, closed-source plugin, so its import is built from the database layout its official web interface reads and tested against tables of that shape on MySQL, not against LiteBans itself. Try it on a copy of your data first and check a few records with `/lookup` and `/history`.
+
+The connection details are read from the other plugin's own `config.yml`. A player who already has an active efxBans punishment of the same type keeps it, and the imported one is skipped and counted. AdvancedBan notes have no counterpart and are left out; LiteBans IP mutes become mutes of their account, and LiteBans server scopes are not kept (efxBans punishments apply on every server).
+
 ## Database
 
 **SQLite** is the default for a single server and needs no setup. Back it up while the server is stopped; copying only the `.db` file of a running database is not enough (the WAL files are needed too).
@@ -192,7 +214,6 @@ If the database can't be opened, or the punishment cache can't be refreshed for 
 - An IP ban blocks one address. On IPv6, players can change their address easily.
 - `/alts` shows at most 100 accounts, and a shared IP does not prove two accounts belong to the same person.
 - The Discord queue is kept in memory; notifications still waiting when the server crashes are not sent.
-- There is no import from other punishment plugins or the vanilla ban list.
 - efxBans takes priority over commands with the same name (`/ban` goes to efxBans). The other plugin's command keeps working under its namespace, such as `/essentials:ban`.
 
 ## Development
