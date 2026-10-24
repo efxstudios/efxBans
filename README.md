@@ -58,6 +58,8 @@ After editing the config, `/efxbans reload` is enough. Changing command names, a
 | `/alts <player>` | Accounts that used the same IP in the past |
 | `/efxbans help\|status\|reload` | Help, status, reload settings |
 
+Tab completion offers online players; `/unban` offers banned players and `/unmute` muted ones, even when they are offline. Any other name can still be typed.
+
 Duration units are `s m h d w` and can be combined: `30m`, `2h`, `7d`, `1d12h`. Without a duration the punishment is permanent, which needs the `.permanent` permission. If the first word of the reason starts with a digit it is read as a duration, so a mistyped duration is rejected instead of silently becoming permanent.
 
 `-s` makes a punishment silent: no announcement, only the staff member gets a confirmation. The target is still removed from the server and Discord is still notified.

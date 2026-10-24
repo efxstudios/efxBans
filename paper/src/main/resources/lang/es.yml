@@ -87,8 +87,8 @@ broadcast:
   undo: '{prefix} <#009DFF>{staff} <#F2F4FF>revocó la sanción de <#FF5656>{player}<#F2F4FF>.'
 
 lists:
-  banlist: '{prefix} <#F2F4FF>Baneos activos <#009DFF>• {total} registros • Página {page}/{pages}'
-  mutelist: '{prefix} <#F2F4FF>Silencios activos <#009DFF>• {total} registros • Página {page}/{pages}'
+  banlist: '{prefix} <#F2F4FF>Baneos activos <#009DFF>• Total: {total} • Página {page}/{pages}'
+  mutelist: '{prefix} <#F2F4FF>Silencios activos <#009DFF>• Total: {total} • Página {page}/{pages}'
   empty: '<#F2F4FF>No hay sanciones activas.'
   entry: '<#009DFF>#{id} <#FF5656>{player} <#F2F4FF>• {type} • <#009DFF>{remaining} <#F2F4FF>• {reason}'
   hover: '<#F2F4FF>Staff: <#009DFF>{staff}<newline><#F2F4FF>Inicio: <#009DFF>{created}<newline><#F2F4FF>Haz clic para ver los detalles.'
@@ -186,7 +186,7 @@ webhook:
   ip: IP
 
 inquiry:
-  header: '{prefix} <#F2F4FF>Sanciones activas: <#FF5656>{target} <#009DFF>• {total} registros'
+  header: '{prefix} <#F2F4FF>Sanciones activas: <#FF5656>{target} <#009DFF>• Total: {total}'
   empty: '{prefix} <#F2F4FF>No hay sanciones activas para este objetivo.'
   entry:
     - '<dark_gray>────────────────────────────────'

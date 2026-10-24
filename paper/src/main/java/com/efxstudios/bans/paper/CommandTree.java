@@ -72,11 +72,12 @@ public final class CommandTree {
 
     public void register(Commands registrar) {
         for (Kind kind : Kind.values()) registerPunishment(registrar, kind);
+        Map<String, Set<Kind>> removable = Map.of("unban", Set.of(Kind.BAN, Kind.IPBAN), "unmute", Set.of(Kind.MUTE));
         for (String label : List.of("unban", "unmute", "undo")) {
             var node = Commands.literal(label)
                     .requires(s -> permissions.has(s.getSender(), "efxbans." + label))
                     .executes(c -> usage(c, label))
-                    .then(target().executes(c -> run(c, () -> remove(c, label))));
+                    .then(target(removable.get(label)).executes(c -> run(c, () -> remove(c, label))));
             register(registrar, node.build(), List.of());
         }
         for (String label : List.of("banlist", "mutelist")) {
@@ -119,7 +120,7 @@ public final class CommandTree {
             var node = Commands.literal(label)
                     .requires(s -> canPreset(s.getSender(), label))
                     .executes(c -> usage(c, label))
-                    .then(target(preset.kind() != Kind.KICK).executes(c -> run(c, () -> preset(c, label))));
+                    .then(target().executes(c -> run(c, () -> preset(c, label))));
             register(registrar, node.build(), preset.aliases());
         }
     }
@@ -127,17 +128,16 @@ public final class CommandTree {
     /** /ban, /ipban, /mute, /kick, /warn with an optional -s (silent) flag before the target. */
     private void registerPunishment(Commands registrar, Kind kind) {
         String label = kind.key();
-        boolean offline = kind != Kind.KICK;
         LiteralArgumentBuilder<CommandSourceStack> node = Commands.literal(label)
                 .requires(s -> permissions.canIssue(s.getSender(), kind))
                 .executes(c -> usage(c, label));
-        node.then(target(offline).executes(c -> usage(c, label))
+        node.then(target().executes(c -> usage(c, label))
                 .then(details(kind).executes(c -> run(c, () -> issue(c, kind, false)))));
         if (kind != Kind.WARN) {
             node.then(Commands.literal("-s")
                     .requires(s -> permissions.has(s.getSender(), "efxbans." + label + ".silent"))
                     .executes(c -> usage(c, label))
-                    .then(target(offline).executes(c -> usage(c, label))
+                    .then(target().executes(c -> usage(c, label))
                             .then(details(kind).executes(c -> run(c, () -> issue(c, kind, true))))));
         }
         register(registrar, node.build(), List.of());
@@ -199,17 +199,22 @@ public final class CommandTree {
 
     // ---------------------------------------------------------------- arguments
 
+    /** Player name, UUID, IP or #ID. Suggests online players; any other valid name can still be typed. */
     private RequiredArgumentBuilder<CommandSourceStack, String> target() {
-        return target(true);
+        return target(null);
     }
 
-    /** Player name, UUID, IP or #ID. Suggests online players and, if offline is true, recently seen names. */
-    private RequiredArgumentBuilder<CommandSourceStack, String> target(boolean offline) {
+    /**
+     * With {@code punished} set, suggests the players who currently have such a punishment (online or not)
+     * instead of everyone online: /unban lists banned players, /unmute muted ones. The names come from the
+     * in-memory punishment cache, so a keystroke never runs SQL.
+     */
+    private RequiredArgumentBuilder<CommandSourceStack, String> target(Set<Kind> punished) {
         Supplier<String> error = () -> messages().text("texts.target-required", "A player, IP or #ID is required.");
         return Commands.argument("target", new TargetArgument(error)).suggests((c, b) -> {
             Set<String> names = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-            if (offline && plugin.engine() != null) names.addAll(plugin.engine().names());
-            for (BansPlugin.Online player : plugin.online().values()) names.add(player.name());
+            if (punished == null) plugin.online().values().forEach(player -> names.add(player.name()));
+            else if (plugin.engine() != null) names.addAll(plugin.engine().cache.names(punished));
             String remaining = b.getRemainingLowerCase();
             names.stream().filter(n -> n.toLowerCase(Locale.ROOT).startsWith(remaining)).limit(80).forEach(b::suggest);
             return b.buildFuture();

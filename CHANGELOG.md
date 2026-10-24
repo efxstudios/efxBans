@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `timezone` and `date-format` settings for dates in messages.
 - Update checker based on GitHub Releases. A newer version is logged to the console and announced on join, with a clickable link, to players with `efxbans.update.notify`. Turn it off with `update-checker.enabled: false`.
 - `/efxbans status` now shows the plugin version.
+- Tab completion suggests online players. `/unban` suggests banned players and `/unmute` muted players, online or not; the names come from memory, so typing never queries the database.
 - Usage lines, duration units (singular and plural), Discord field titles and the remaining hard-coded texts moved to the language files.
 
 ### Changed
@@ -17,6 +18,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `/sorgu` is now `/lookup` with the permission `efxbans.lookup`. `/sorgu` keeps working as an alias, and `efxbans.sorgu` still grants `efxbans.lookup`.
 - New installs get English example presets (`cheating`, `advertising`, `swearing`, `spam`); existing presets are not touched.
 - Console log messages are in English.
+- The database query for recently seen names (every 30 seconds) is gone; it was only used for suggestions.
+- List and lookup headers say "Total: 1" instead of "1 records".
 - The JAR shrank from 19 MB to about 290 KB: the SQLite and MySQL drivers are now loaded from Paper's own libraries.
 - The distributed file is now named `efxBans-<version>.jar`.
 

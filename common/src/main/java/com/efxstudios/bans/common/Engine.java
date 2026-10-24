@@ -22,7 +22,6 @@ public final class Engine implements AutoCloseable {
 
     private static final int QUEUE_LIMIT = 256;
     private static final int PAGE = 500;
-    private static final long NAME_REFRESH_MILLIS = 30_000;
     private static final long ERROR_LOG_INTERVAL_MILLIS = 30_000;
 
     public final ActiveCache cache = new ActiveCache();
@@ -34,10 +33,8 @@ public final class Engine implements AutoCloseable {
     private final Consumer<Throwable> errors;
     // Only touched by the worker thread (and the constructor before it starts).
     private long cursor;
-    private long namesAt;
     private long lastErrorLog;
     private volatile long healthyAt;
-    private volatile List<String> names;
 
     public Engine(Store store, long pollMillis, Consumer<List<Store.Change>> observer, Consumer<Throwable> errors) throws SQLException {
         this.store = store;
@@ -47,7 +44,6 @@ public final class Engine implements AutoCloseable {
         cache.replace(snapshot.active());
         cursor = snapshot.cursor();
         healthyAt = System.currentTimeMillis();
-        names = store.names();
         worker = new ScheduledThreadPoolExecutor(1, r -> {
             Thread thread = new Thread(r, "efxBans-database");
             thread.setDaemon(true);
@@ -60,11 +56,6 @@ public final class Engine implements AutoCloseable {
     /** False once the change feed could not be read for maxAgeMillis: callers then fail closed. */
     public boolean healthy(long maxAgeMillis) {
         return System.currentTimeMillis() - healthyAt < maxAgeMillis;
-    }
-
-    /** Recently seen player names, for command suggestions. */
-    public List<String> names() {
-        return names;
     }
 
     /** Queues work on the database thread. Fails fast instead of growing without bound. */
@@ -114,12 +105,7 @@ public final class Engine implements AutoCloseable {
                 observer.accept(changes);
                 cursor = changes.getLast().sequence();
             }
-            long now = System.currentTimeMillis();
-            if (now - namesAt > NAME_REFRESH_MILLIS) {
-                names = store.names();
-                namesAt = now;
-            }
-            healthyAt = now;
+            healthyAt = System.currentTimeMillis();
             if (changes.size() == PAGE) hint();
         } catch (Throwable e) {
             long now = System.currentTimeMillis();

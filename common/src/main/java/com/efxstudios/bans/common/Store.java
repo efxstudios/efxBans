@@ -213,16 +213,6 @@ public final class Store implements AutoCloseable {
         return result;
     }
 
-    public List<String> names() throws SQLException {
-        try (Connection c = pool.getConnection();
-             PreparedStatement s = prepare(c, "SELECT name FROM efxb_profiles ORDER BY seen DESC LIMIT 1000");
-             ResultSet r = s.executeQuery()) {
-            List<String> names = new ArrayList<>();
-            while (r.next()) names.add(r.getString(1));
-            return names;
-        }
-    }
-
     /** Accounts that ever used one of this account's IP addresses (at most 100). */
     public List<Profile> alts(UUID uuid) throws SQLException {
         try (Connection c = pool.getConnection()) {

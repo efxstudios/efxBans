@@ -87,8 +87,8 @@ broadcast:
   undo: '{prefix} <#009DFF>{staff} <#F2F4FF>hat die Strafe von <#FF5656>{player} <#F2F4FF>widerrufen.'
 
 lists:
-  banlist: '{prefix} <#F2F4FF>Aktive Banns <#009DFF>• {total} Einträge • Seite {page}/{pages}'
-  mutelist: '{prefix} <#F2F4FF>Aktive Stummschaltungen <#009DFF>• {total} Einträge • Seite {page}/{pages}'
+  banlist: '{prefix} <#F2F4FF>Aktive Banns <#009DFF>• Gesamt: {total} • Seite {page}/{pages}'
+  mutelist: '{prefix} <#F2F4FF>Aktive Stummschaltungen <#009DFF>• Gesamt: {total} • Seite {page}/{pages}'
   empty: '<#F2F4FF>Es gibt keine aktiven Strafen.'
   entry: '<#009DFF>#{id} <#FF5656>{player} <#F2F4FF>• {type} • <#009DFF>{remaining} <#F2F4FF>• {reason}'
   hover: '<#F2F4FF>Teammitglied: <#009DFF>{staff}<newline><#F2F4FF>Beginn: <#009DFF>{created}<newline><#F2F4FF>Für Details klicken.'
@@ -186,7 +186,7 @@ webhook:
   ip: IP
 
 inquiry:
-  header: '{prefix} <#F2F4FF>Aktive Strafen: <#FF5656>{target} <#009DFF>• {total} Einträge'
+  header: '{prefix} <#F2F4FF>Aktive Strafen: <#FF5656>{target} <#009DFF>• Gesamt: {total}'
   empty: '{prefix} <#F2F4FF>Für dieses Ziel gibt es keine aktiven Strafen.'
   entry:
     - '<dark_gray>────────────────────────────────'

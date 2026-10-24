@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -45,6 +46,14 @@ public final class ActiveCache {
         accounts.replaceAll((k, v) -> List.copyOf(v));
         ips.replaceAll((k, v) -> List.copyOf(v));
         index = new Index(Map.copyOf(ids), Map.copyOf(accounts), Map.copyOf(ips));
+    }
+
+    /** Names of accounts that currently have one of these punishments (address-only IP bans have no name). */
+    public Set<String> names(Set<Kind> kinds) {
+        long now = System.currentTimeMillis();
+        Set<String> names = new HashSet<>();
+        for (Punishment p : index.ids.values()) if (p.target() != null && kinds.contains(p.kind()) && p.active(now)) names.add(p.name());
+        return names;
     }
 
     /** Newest active punishment of the given kinds for this account or, for IP bans, this address. */
