@@ -29,7 +29,7 @@
 
         <paper.version>1.20.6-R0.1-SNAPSHOT</paper.version>
         <paper.group>io.papermc.paper</paper.group>
-        <adventure.version>4.26.1</adventure.version>
+        <adventure.version>5.2.0</adventure.version>
         <mockito.version>5.20.0</mockito.version>
         <sqlite.version>3.49.1.0</sqlite.version>
         <mysql.version>9.7.0</mysql.version>
