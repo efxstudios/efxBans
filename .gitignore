@@ -1,0 +1,38 @@
+# ---- Build output
+target/
+dist/
+dependency-reduced-pom.xml
+.mvn/wrapper/maven-wrapper.jar
+
+# ---- IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.classpath
+.project
+.settings/
+.factorypath
+out/
+bin/
+
+# ---- OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- Local test servers, logs and private notes (never public)
+.runtime/
+internal/
+run/
+*.log
+logs/
+
+# ---- Secrets and local data: real configs may contain database passwords and webhook URLs
+.env
+.env.*
+*.db
+*.db-wal
+*.db-shm
+*.sqlite

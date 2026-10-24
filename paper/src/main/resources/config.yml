@@ -1,0 +1,94 @@
+# efxBans • Veritabanı / sorgulama aralığı değişiklikleri yeniden başlatma gerektirir.
+database:
+  type: sqlite # sqlite | mysql — SQLite dosyası: plugins/efxBans/punishments.db
+  mysql:
+    host: localhost
+    port: 3306
+    database: efxbans
+    username: efxbans
+    password: ''
+    tls: true # MySQL sunucu sertifikası ve sunucu adı doğrulanır.
+    pool-size: 4
+
+# Ortak MySQL kullanan Paper sunucuları değişiklik günlüğünden güncellenir.
+# Velocity bileşeni yoktur. Her Paper sunucusuna efxBans kurulmalıdır.
+network:
+  poll-millis: 500
+  fail-closed-after-millis: 15000
+
+permissions:
+  default-maximum: 30d
+  # En yüksek eşleşen limit uygulanır. Temel limitten küçük bir değer sınırı azaltmaz.
+  # efxbans.duration.unlimited yalnızca süre sınırını kaldırır; ceza yetkilerini vermez.
+  duration-limits:
+    - permission: efxbans.limit.senior
+      maximum: 90d
+    - permission: efxbans.limit.admin
+      maximum: 365d
+  # Konsol/RCON da işlem yetkilerine ve bu ek izin listesine tabidir.
+  console-allowed: ['*']
+
+notifications:
+  public: false # false: yalnızca efxbans.notify yetkilileri ve konsol
+
+mute:
+  # İsim alanı önekleri de yakalanır: /minecraft:msg gibi.
+  # Başka özel mesaj eklentilerinin alias'larını buraya ekleyin.
+  blocked-commands: [msg, tell, w, whisper, m, message, r, reply, me, say, emote, teammsg, tm]
+
+integrations:
+  efxcore: true
+
+# GitHub Releases üzerinden yeni sürüm kontrolü. Yalnızca en son sürüm numarası okunur;
+# sunucu veya oyuncu verisi gönderilmez. Kapatmak için enabled: false yazın.
+update-checker:
+  enabled: true
+  notify-staff: true # efxbans.update.notify yetkisi olanlara girişte bildirim
+  interval-hours: 12 # 1–168
+
+discord:
+  enabled: false
+  url: ''
+  include-ip: false
+  actions: [ban, ipban, mute, kick, warn, remove, undo]
+  title: efxBans
+  footer: 'efxStudios • Ceza kaydı'
+
+# Her preset: preset yetkisi + tür yetkisi + temporary/permanent + süre limiti.
+# command ve aliases küçük Türkçe harf destekler: ç, ğ, ı, ö, ş, ü (örnek: command: küfür).
+# permission ASCII kalır; belirtilmezse komut Türkçe harfleri çevrilerek kullanılır (küfür -> efxbans.preset.kufur).
+# Yeni/silinen/değişen komut adı veya alias için tam yeniden başlatma gerekir.
+# Mevcut komutun süre/sebep/yetki/kapalı ayarı /efxbans reload ile değişir.
+presets:
+  hile:
+    enabled: true
+    command: hile
+    aliases: [cheatban]
+    type: IPBAN
+    duration: 30d
+    reason: Hile Kullanımı
+    permission: efxbans.preset.hile
+  reklam:
+    enabled: true
+    command: reklam
+    aliases: []
+    type: MUTE
+    duration: 7d
+    reason: Reklam
+    permission: efxbans.preset.reklam
+  kufur:
+    enabled: true
+    command: kufur
+    aliases: []
+    type: MUTE
+    duration: 2h
+    reason: Küfür
+    permission: efxbans.preset.kufur
+  spam:
+    enabled: true
+    command: spam
+    aliases: []
+    type: WARN
+    duration: permanent # KICK/WARN için süre uygulanmaz.
+    reason: Sohbeti tekrarlayan mesajlarla doldurmak
+    permission: efxbans.preset.spam

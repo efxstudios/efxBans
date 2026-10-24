@@ -1,0 +1,110 @@
+# Bütün mesajlar MiniMessage. Liste veya YAML | ile çok satır kullanabilirsiniz.
+# Güvenli alanlar: {prefix} {player} {staff} {reason} {duration} {remaining} {id}
+# {type} {created} {expires} {status} {closed_at} {closed_by} {close_reason}
+# Duyurularda ek alan: {change_reason}. IP varsayılan mesajlarda gösterilmez.
+prefix: '<b><gradient:#FF5656:#FFB8B8><shadow:#000000:1>ᴇꜰxʙᴀɴꜱ</shadow></gradient></b> <gray>»'
+timezone: Europe/Istanbul
+
+# Önceki sorgu varsayılanları: özelleştirilmemiş şablonları güncellemek içindir.
+inquiry:
+  header: '{prefix} <#F2F4FF>Ceza sorgusu: <#FF5656>{target} <#009DFF>• {total} kayıt'
+  empty: '<#F2F4FF>Bu hedef için ban veya susturma kaydı bulunmuyor.'
+  entry:
+    - '<dark_gray>────────────────────────────────'
+    - '<#F2F4FF>Ceza: <#009DFF>#{id} • {type} <#F2F4FF>• <#FF5656>{status}'
+    - '<#F2F4FF>Oyuncu: <#FF5656>{player}'
+    - '<#F2F4FF>Yetkili: <#009DFF>{staff}'
+    - '<#F2F4FF>Sebep: <#009DFF>{reason}'
+    - '<#F2F4FF>Veriliş: <#009DFF>{created}'
+    - '<#F2F4FF>Süre: <#009DFF>{duration} <#F2F4FF>• Kalan: <#009DFF>{remaining}'
+    - '<#F2F4FF>Bitiş: <#009DFF>{expires}'
+    - '<#F2F4FF>Kaldıran / geri alan: <#009DFF>{closed_by}'
+    - '<#F2F4FF>İşlem tarihi: <#009DFF>{closed_at}'
+    - '<#F2F4FF>İşlem sebebi: <#009DFF>{close_reason}'
+permanent: Kalıcı
+status:
+  ACTIVE: Aktif
+  EXPIRED: Süresi dolmuş
+  REMOVED: Kaldırılmış
+  REVOKED: Geri alınmış
+  EXECUTED: Uygulanmış
+
+error: '{prefix} <#FF5656>{error}'
+errors:
+  no-permission: '{prefix} <#F2F4FF>Bu işlem için yetkiniz yok: <#009DFF>{permission}'
+  maximum-duration: '{prefix} <#F2F4FF>Maksimum ceza süreniz: <#009DFF>{maximum}'
+  invalid-duration: '{prefix} <#FF5656>Geçersiz süre. <#F2F4FF>Örnek: <#009DFF>30m, 2h, 7d, 1d2h'
+  invalid-reason: '{prefix} <#F2F4FF>Sebep <#009DFF>1–1000 karakter <#F2F4FF>olmalı.'
+  reason-required: '{prefix} <#F2F4FF>Süre sonrası sebep yazın. <#009DFF>{usage}'
+  account-required: '{prefix} <#F2F4FF>Geçerli bir <#009DFF>oyuncu adı veya UUID <#F2F4FF>yazın.'
+  ambiguous-name: '{prefix} <#F2F4FF>Bu adı birden fazla hesap kullanmış; <#009DFF>oyuncunun UUID bilgisini <#F2F4FF>kullanın.'
+  unknown-ip: '{prefix} <#F2F4FF>Oyuncunun kayıtlı IP adresi yok. <#009DFF>Önce sunucuya giriş yapmış olması gerekir.'
+  duplicate-active: '{prefix} <#F2F4FF>Bu türde <#009DFF>aktif ceza <#F2F4FF>zaten var; önce kaldırın veya geri alın.'
+  preset-disabled: '{prefix} <#F2F4FF>Bu preset kapatıldı veya silindi. <#009DFF>Komut ağacı değişiklikleri <#F2F4FF>için sunucuyu yeniden başlatın.'
+  exempt: '{prefix} <#FF5656>Bu oyuncu bu cezadan muaf.'
+  id-required: '{prefix} <#F2F4FF>Geçerli ceza ID bilgisi yazın: <#009DFF>#123'
+database-error: '{prefix} <#F2F4FF>İşlem sonucu doğrulanamadı. <#009DFF>Tekrar denemeden önce geçmişi ve veritabanı bağlantısını <#F2F4FF>kontrol edin; mevcut kayıtlar korunuyor.'
+unavailable: '{prefix} <#F2F4FF>Ceza sistemi şu an doğrulama yapamıyor. <#009DFF>Lütfen biraz sonra tekrar deneyin.'
+unknown-player: '{prefix} <#FF5656>{player} <#F2F4FF>hesabı doğrulanamadı. Kayıtlı oyuncu adı veya UUID kullanın.'
+usage: '{prefix} <#F2F4FF>Kullanım: <#009DFF>{usage}'
+not-found: '{prefix} <#F2F4FF>Bu sorguya uygun <#009DFF>kayıt bulunamadı.'
+issued: '{prefix} <#FF5656>{player} <#F2F4FF>için <#009DFF>#{id} <#F2F4FF>cezası kaydedildi. <#009DFF>{duration} <#F2F4FF>• {reason}'
+removed: '{prefix} <#009DFF>#{id} <#F2F4FF>cezası kaldırıldı. <#FF5656>{player} <#F2F4FF>• {close_reason}'
+undone: '{prefix} <#009DFF>#{id} <#F2F4FF>cezası geri alındı. <#FF5656>{player} <#F2F4FF>• {close_reason}'
+muted: '{prefix} <#F2F4FF>Sohbet yetkiniz <#FF5656>susturuldu. <#F2F4FF>Sebep: <#009DFF>{reason} <#F2F4FF>• Kalan: <#009DFF>{remaining} <#F2F4FF>• #{id}'
+muted-notice: '{prefix} <#F2F4FF><#009DFF>{staff} <#F2F4FF>sizi <#009DFF>{reason} <#F2F4FF>sebebiyle <#009DFF>{duration} <#F2F4FF>susturdu. <#FF5656>#{id}'
+warned: '{prefix} <#009DFF>{staff} <#F2F4FF>size uyarı verdi. Sebep: <#009DFF>{reason} <#F2F4FF>• <#FF5656>#{id}'
+reload: '{prefix} <#F2F4FF>Mesajlar, bildirimler, yetki sınırları ve mevcut preset ayarları <#009DFF>yenilendi.'
+reload-restart: '{prefix} <#F2F4FF>Güvenli ayarlar yenilendi. <#009DFF>Komut adları/alias veya veritabanı değişiklikleri <#F2F4FF>için sunucuyu tamamen yeniden başlatın.'
+health: '{prefix} <#F2F4FF>Durum: <#009DFF>{health} <#F2F4FF>• Paper {version} • {database}'
+help-header: '{prefix} <#F2F4FF>Ceza yönetimi <#009DFF>• efxBans'
+help-entry: '<#009DFF>{usage}'
+history-header: '{prefix} <#FF5656>{player} <#F2F4FF>ceza geçmişi • Sayfa <#009DFF>{page} <gray>({uuid})'
+history-entry: '<#009DFF>#{id} <#F2F4FF>{type} • <#FF5656>{status} <#F2F4FF>• {created} • <#009DFF>{staff} <#F2F4FF>• {duration}<newline><#F2F4FF>  Sebep: <#009DFF>{reason}'
+detail:
+  - '{prefix} <#009DFF>#{id} <#F2F4FF>• {type} • <#FF5656>{status}'
+  - '<#F2F4FF>Oyuncu: <#FF5656>{player} <#F2F4FF>• Yetkili: <#009DFF>{staff}'
+  - '<#F2F4FF>Sebep: <#009DFF>{reason}'
+  - '<#F2F4FF>Başlangıç: <#009DFF>{created} <#F2F4FF>• Bitiş: <#009DFF>{expires}'
+  - '<#F2F4FF>Süre: <#009DFF>{duration} <#F2F4FF>• Kalan: <#009DFF>{remaining}'
+  - '<#F2F4FF>Kaldıran / geri alan: <#009DFF>{closed_by} <#F2F4FF>• {closed_at} • {close_reason}'
+audit-entry: '<gray>{created} <#009DFF>{action} <#F2F4FF>• {staff} • {reason}'
+ip-detail: '{prefix} <#F2F4FF>Özel IP bilgisi: <#009DFF>{ip}'
+alts-header: '{prefix} <#FF5656>{player} <#F2F4FF>ile geçmişte ortak IP kullanan hesaplar. <#009DFF>Bu bağlantı aynı kişi olduklarını kanıtlamaz.'
+alts-entry: '<#FF5656>{player} <gray>({uuid})'
+
+broadcast:
+  ban: '{prefix} <#009DFF>{staff} <#F2F4FF>adlı yetkili, <#FF5656>{player} <#F2F4FF>oyuncusunu <#009DFF>{reason} <#F2F4FF>sebebiyle <#009DFF>{duration} <#F2F4FF>yasakladı. <gray>#{id}'
+  ipban: '{prefix} <#009DFF>{staff} <#F2F4FF>adlı yetkili, <#FF5656>{player} <#F2F4FF>için <#009DFF>{reason} <#F2F4FF>sebebiyle <#009DFF>{duration} <#F2F4FF>IP yasağı verdi. <gray>#{id}'
+  mute: '{prefix} <#009DFF>{staff} <#F2F4FF>adlı yetkili, <#FF5656>{player} <#F2F4FF>oyuncusunu <#009DFF>{reason} <#F2F4FF>sebebiyle <#009DFF>{duration} <#F2F4FF>susturdu. <gray>#{id}'
+  kick: '{prefix} <#009DFF>{staff} <#F2F4FF>adlı yetkili, <#FF5656>{player} <#F2F4FF>oyuncusunu <#009DFF>{reason} <#F2F4FF>sebebiyle sunucudan attı. <gray>#{id}'
+  warn: '{prefix} <#009DFF>{staff} <#F2F4FF>adlı yetkili, <#FF5656>{player} <#F2F4FF>oyuncusuna <#009DFF>{reason} <#F2F4FF>sebebiyle uyarı verdi. <gray>#{id}'
+  remove: '{prefix} <#009DFF>{staff} <#F2F4FF>adlı yetkili, <#FF5656>{player} <#F2F4FF>için <#009DFF>#{id} <#F2F4FF>cezasını kaldırdı. <#009DFF>{change_reason}'
+  undo: '{prefix} <#009DFF>{staff} <#F2F4FF>adlı yetkili, <#FF5656>{player} <#F2F4FF>için <#009DFF>#{id} <#F2F4FF>cezasını geri aldı. <#009DFF>{change_reason}'
+
+screen:
+  ban:
+    - '{prefix}'
+    - '<#FF5656>Bu sunucudan yasaklandınız.'
+    - ''
+    - '<#F2F4FF>Oyuncu: <#FF5656>{player}'
+    - '<#F2F4FF>Yetkili: <#009DFF>{staff}'
+    - '<#F2F4FF>Sebep: <#009DFF>{reason}'
+    - '<#F2F4FF>Süre: <#009DFF>{duration}'
+    - '<#F2F4FF>Kalan: <#009DFF>{remaining}'
+    - '<#F2F4FF>Ceza ID: <#009DFF>#{id}'
+  ipban:
+    - '{prefix}'
+    - '<#FF5656>Hesabınız veya bağlantınız yasaklandı.'
+    - ''
+    - '<#F2F4FF>Yetkili: <#009DFF>{staff}'
+    - '<#F2F4FF>Sebep: <#009DFF>{reason}'
+    - '<#F2F4FF>Süre: <#009DFF>{duration}'
+    - '<#F2F4FF>Kalan: <#009DFF>{remaining}'
+    - '<#F2F4FF>Ceza ID: <#009DFF>#{id}'
+  kick:
+    - '{prefix}'
+    - '<#FF5656>Sunucudan çıkarıldınız.'
+    - '<#F2F4FF>Yetkili: <#009DFF>{staff}'
+    - '<#F2F4FF>Sebep: <#009DFF>{reason}'
+    - '<#F2F4FF>Ceza ID: <#009DFF>#{id}'

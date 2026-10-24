@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and test (Java ${{ matrix.java }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 21: minimum for Paper 1.21.11, 25: required by Paper 26.x
+        java: ['21', '25']
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: maven
+      - run: ./mvnw -B -ntp verify
+      - uses: actions/upload-artifact@v7
+        if: matrix.java == '21'
+        with:
+          name: efxBans-jar
+          path: paper/target/efxBans-*.jar
+          if-no-files-found: error
+          retention-days: 14
+
+  paper-26:
+    name: Compile against Paper 26.3 API
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - run: ./mvnw -B -ntp verify -Dpaper.version=26.3.build.214-stable -Dmaven.compiler.release=25
+
+  mysql:
+    name: Store tests on MySQL ${{ matrix.mysql }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        mysql: ['8.0', '8.4']
+    services:
+      mysql:
+        image: mysql:${{ matrix.mysql }}
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+          MYSQL_DATABASE: efxbans_test
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    env:
+      EFXBANS_MYSQL_HOST: 127.0.0.1
+      EFXBANS_MYSQL_PORT: '3306'
+      EFXBANS_MYSQL_DATABASE: efxbans_test
+      EFXBANS_MYSQL_USER: root
+      EFXBANS_MYSQL_PASSWORD: ''
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - run: ./mvnw -B -ntp -pl common -am test -Dtest=MySqlStoreTest -Dsurefire.failIfNoSpecifiedTests=false
