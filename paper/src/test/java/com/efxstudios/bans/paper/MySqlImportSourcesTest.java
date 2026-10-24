@@ -32,7 +32,7 @@ class MySqlImportSourcesTest extends ImportSourcesContract {
         String liteBans = " (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, uuid VARCHAR(36), ip VARCHAR(45), reason VARCHAR(2048),"
                 + " banned_by_uuid VARCHAR(36) NOT NULL, banned_by_name VARCHAR(128), removed_by_uuid VARCHAR(36), removed_by_name VARCHAR(128),"
                 + " removed_by_date TIMESTAMP NULL DEFAULT NULL, removed_by_reason VARCHAR(2048), time BIGINT NOT NULL, until BIGINT NOT NULL,"
-                + " template TINYINT NOT NULL DEFAULT 255, server_scope VARCHAR(32), server_origin VARCHAR(32), silent BIT(1) NOT NULL,"
+                + " template TINYINT UNSIGNED NOT NULL DEFAULT 255, server_scope VARCHAR(32), server_origin VARCHAR(32), silent BIT(1) NOT NULL,"
                 + " ipban BIT(1) NOT NULL, ipban_wildcard BIT(1) NOT NULL DEFAULT 0, active BIT(1) NOT NULL";
         return List.of(
                 "CREATE TABLE `Punishments`" + advancedBan,
@@ -42,7 +42,7 @@ class MySqlImportSourcesTest extends ImportSourcesContract {
                 "CREATE TABLE litebans_warnings" + liteBans + ", warned BIT(1) NOT NULL DEFAULT 0)",
                 "CREATE TABLE litebans_kicks (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, uuid VARCHAR(36), ip VARCHAR(45), reason VARCHAR(2048),"
                         + " banned_by_uuid VARCHAR(36) NOT NULL, banned_by_name VARCHAR(128), time BIGINT NOT NULL, until BIGINT NOT NULL,"
-                        + " template TINYINT NOT NULL DEFAULT 255, server_scope VARCHAR(32), server_origin VARCHAR(32), silent BIT(1) NOT NULL,"
+                        + " template TINYINT UNSIGNED NOT NULL DEFAULT 255, server_scope VARCHAR(32), server_origin VARCHAR(32), silent BIT(1) NOT NULL,"
                         + " ipban BIT(1) NOT NULL, ipban_wildcard BIT(1) NOT NULL DEFAULT 0, active BIT(1) NOT NULL)",
                 "CREATE TABLE litebans_history (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
                         + " name VARCHAR(16), uuid VARCHAR(36), ip VARCHAR(45))");
